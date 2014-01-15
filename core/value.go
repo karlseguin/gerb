@@ -19,3 +19,11 @@ type FloatValue struct {
 func (v *FloatValue) Resolve(context *Context) interface{} {
 	return v.value
 }
+
+type CharValue struct {
+	value byte
+}
+
+func (v *CharValue) Resolve(context *Context) interface{} {
+	return v.value
+}

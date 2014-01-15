@@ -8,6 +8,8 @@ import (
 // Convert arbitrary data to []byte
 func ToBytes(data interface{}) []byte {
 	switch typed := data.(type) {
+	case byte:
+		return []byte{typed}
 	case []byte:
 		return typed
 	case string:

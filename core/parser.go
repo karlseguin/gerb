@@ -50,9 +50,9 @@ func (p *Parser) ReadValue() (Value, error) {
 	if first >= '0' && first <= '9' {
 		return p.ReadNumber(negate)
 	}
-	// if first == '\'' {
-	// 	return p.ReadChar()
-	// }
+	if first == '\'' {
+		return p.ReadChar(negate)
+	}
 	// if first == '"' {
 	// 	return p.ReadString()
 	// }
@@ -90,6 +90,21 @@ func (p *Parser) ReadNumber(negate bool) (Value, error) {
 	return &IntValue{integer}, nil
 }
 
+func (p *Parser) ReadChar(negate bool) (Value, error) {
+	if negate {
+		return nil, p.error("Don't know what to do with a negative character")
+	}
+	c := p.Next()
+	if c == '\\' {
+		c = p.Next()
+	}
+	if p.Next() != '\'' {
+		return nil, p.error("Invalid character")
+	}
+	p.position++
+	return &CharValue{c}, nil
+
+}
 func (p *Parser) ReadTagType() TagType {
 	switch p.Consume() {
 	case 0:
@@ -113,7 +128,7 @@ func (p *Parser) ReadCloseTag() error {
 
 func (p *Parser) SkipUntil(b byte) bool {
 	if at := bytes.IndexByte(p.data[p.position:], b); at != -1 {
-		p.position = at
+		p.position = p.position + at
 		return true
 	}
 	p.position = len(p.data)

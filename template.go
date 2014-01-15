@@ -24,7 +24,9 @@ func newTemplate(data []byte) (*Template, error) {
 			if err != nil {
 				return nil, err
 			}
-			container.AddCode(output)
+			if output != nil {
+				container.AddCode(output)
+			}
 		}
 	}
 	return template, nil

@@ -27,7 +27,7 @@ func (p *Parser) ReadLiteral() *Literal {
 	start := p.position
 	for {
 		if p.SkipUntil('%') == false {
-			return nil
+			return &Literal{clone(p.data[start:p.len])}
 		}
 		if p.Prev() == '<' {
 			p.position++ //move past the %
@@ -53,9 +53,9 @@ func (p *Parser) ReadValue() (Value, error) {
 	if first == '\'' {
 		return p.ReadChar(negate)
 	}
-	// if first == '"' {
-	// 	return p.ReadString()
-	// }
+	if first == '"' {
+		return p.ReadString(negate)
+	}
 	return nil, nil
 }
 
@@ -84,10 +84,10 @@ func (p *Parser) ReadNumber(negate bool) (Value, error) {
 	if isDecimal {
 		value := float64(integer) + float64(fraction) / math.Pow10(partLength)
 		if negate { value *= -1 }
-		return &FloatValue{value}, nil
+		return &StaticValue{value}, nil
 	}
 	if negate { integer *= -1 }
-	return &IntValue{integer}, nil
+	return &StaticValue{integer}, nil
 }
 
 func (p *Parser) ReadChar(negate bool) (Value, error) {
@@ -102,9 +102,43 @@ func (p *Parser) ReadChar(negate bool) (Value, error) {
 		return nil, p.error("Invalid character")
 	}
 	p.position++
-	return &CharValue{c}, nil
-
+	return &StaticValue{c}, nil
 }
+
+func (p *Parser) ReadString(negate bool) (Value, error) {
+	if negate {
+		return nil, p.error("Don't know what to do with a negative string")
+	}
+	p.position++
+	start := p.position
+	escaped := 0
+
+	for ; p.position < p.end; p.position++ {
+		c := p.data[p.position]
+		if c == '\\' {
+			escaped++
+			p.position++
+			continue
+		}
+		if c == '"' {
+			break
+		}
+	}
+
+	var data []byte
+	var err error
+	if escaped > 0 {
+		data, err = p.unescape(p.data[start:p.position], escaped)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		data = p.data[start : p.position]
+	}
+	p.position++ //consume the "
+	return &StaticValue{string(data)}, nil
+}
+
 func (p *Parser) ReadTagType() TagType {
 	switch p.Consume() {
 	case 0:
@@ -188,7 +222,37 @@ func (p *Parser) error(s string) error {
 			break
 		}
 	}
-	return errors.New(fmt.Sprintf("%s: %q", s, string(p.data[start:end])))
+	return errors.New(fmt.Sprintf("%s: %v", s, string(p.data[start:end])))
+}
+
+func (p *Parser) unescape(data []byte, escaped int) ([]byte, error) {
+	value := make([]byte, len(data)-escaped)
+	at := 0
+	for {
+		index := bytes.IndexByte(data, '\\')
+		if index == -1 {
+			copy(value[at:], data)
+			break
+		}
+		at += copy(value[at:], data[:index])
+		switch data[index+1] {
+		case 'n':
+			value[at] = '\n'
+		case 'r':
+			value[at] = '\r'
+		case 't':
+			value[at] = '\t'
+		case '"':
+			value[at] = '"'
+		case '\\':
+			value[at] = '\\'
+		default:
+			return nil, p.error(fmt.Sprintf("Unknown escape sequence %s", string(data[index+1])))
+		}
+		at++
+		data = data[index+2:]
+	}
+	return value, nil
 }
 
 func clone(data []byte) []byte {

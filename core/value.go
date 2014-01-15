@@ -4,26 +4,10 @@ type Value interface {
 	Resolve(context *Context) interface{}
 }
 
-type IntValue struct {
-	value int
+type StaticValue struct {
+	value interface{}
 }
 
-func (v *IntValue) Resolve(context *Context) interface{} {
-	return v.value
-}
-
-type FloatValue struct {
-	value float64
-}
-
-func (v *FloatValue) Resolve(context *Context) interface{} {
-	return v.value
-}
-
-type CharValue struct {
-	value byte
-}
-
-func (v *CharValue) Resolve(context *Context) interface{} {
+func (v *StaticValue) Resolve(context *Context) interface{} {
 	return v.value
 }

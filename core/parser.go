@@ -2,14 +2,14 @@ package core
 
 import (
 	"bytes"
-	"fmt"
 	"errors"
+	"fmt"
 	"math"
 )
 
 type Parser struct {
 	end      int
-	len int
+	len      int
 	position int
 	data     []byte
 }
@@ -17,7 +17,7 @@ type Parser struct {
 func NewParser(data []byte) *Parser {
 	p := &Parser{
 		data: data,
-		len: len(data),
+		len:  len(data),
 		end:  len(data) - 1,
 	}
 	return p
@@ -68,7 +68,9 @@ func (p *Parser) ReadNumber(negate bool) (Value, error) {
 	for ; p.position < p.end; p.position++ {
 		c := p.data[p.position]
 		if c == '.' {
-			if isDecimal { break }
+			if isDecimal {
+				break
+			}
 			target = &fraction
 			partLength = 0
 			isDecimal = true
@@ -78,15 +80,19 @@ func (p *Parser) ReadNumber(negate bool) (Value, error) {
 			break
 		}
 		partLength++
-		*target = *target * 10 + int(c - '0')
+		*target = *target*10 + int(c-'0')
 	}
 
 	if isDecimal {
-		value := float64(integer) + float64(fraction) / math.Pow10(partLength)
-		if negate { value *= -1 }
+		value := float64(integer) + float64(fraction)/math.Pow10(partLength)
+		if negate {
+			value *= -1
+		}
 		return &StaticValue{value}, nil
 	}
-	if negate { integer *= -1 }
+	if negate {
+		integer *= -1
+	}
 	return &StaticValue{integer}, nil
 }
 
@@ -133,7 +139,7 @@ func (p *Parser) ReadString(negate bool) (Value, error) {
 			return nil, err
 		}
 	} else {
-		data = p.data[start : p.position]
+		data = p.data[start:p.position]
 	}
 	p.position++ //consume the "
 	return &StaticValue{string(data)}, nil
@@ -172,7 +178,7 @@ func (p *Parser) SkipUntil(b byte) bool {
 func (p *Parser) SkipSpaces() byte {
 	for ; p.position < p.end; p.position++ {
 		c := p.data[p.position]
-		if c != ' ' && c !=  '\t' && c != '\n' && c != '\r' {
+		if c != ' ' && c != '\t' && c != '\n' && c != '\r' {
 			return c
 		}
 	}

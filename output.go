@@ -1,8 +1,8 @@
 package gerb
 
 import (
-	"github.com/karlseguin/gerb/r"
 	"github.com/karlseguin/gerb/core"
+	"github.com/karlseguin/gerb/r"
 )
 
 type OutputTag struct {

@@ -253,7 +253,7 @@ func (p *Parser) unescape(data []byte, escaped int) ([]byte, error) {
 		case '\\':
 			value[at] = '\\'
 		default:
-			return nil, p.error(fmt.Sprintf("Unknown escape sequence %s", string(data[index+1])))
+			return nil, p.error(fmt.Sprintf("Unknown escape sequence \\%s", string(data[index+1])))
 		}
 		at++
 		data = data[index+2:]

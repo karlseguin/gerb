@@ -61,18 +61,23 @@ func unindex(container interface{}, params []Value, context *Context) interface{
 	value := reflect.ValueOf(container)
 	kind := value.Kind()
 	if kind == reflect.Array || kind == reflect.Slice || kind == reflect.String {
+		length := value.Len()
 		first, ok := r.ToInt(params[0].Resolve(context))
 		if ok == false {
 			return nil
 		}
-		second := 0
+		if first < 0 {
+			first = 0
+		}
+		second := length
 		if valueLength == 2 {
 			second, ok = r.ToInt(params[1].Resolve(context))
 			if ok == false {
 				return nil
 			}
-		} else {
-			second = value.Len()
+			if second > length {
+				second = length
+			}
 		}
 		return value.Slice(first, second).Interface()
 	} else if kind == reflect.Map {

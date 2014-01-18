@@ -152,7 +152,7 @@ func (p *Parser) ReadDynamic(negate bool) (Value, error) {
 	args := make([][]Value, 0, 5)
 	for ;p.position < p.end; p.position++ {
 		c := p.data[p.position]
-		isEnd := c == ' ' || c == '%' || c == ']'
+		isEnd := c == ' ' || c == '%' || c == ':' || c == ']'
 		if c == '.' || isEnd {
 			if isEnd && p.position - start == 1 {
 				break
@@ -187,21 +187,20 @@ func (p *Parser) ReadIndexing() ([]Value, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	c := p.SkipSpaces()
 	if c == ']' {
-		p.position++
 		return []Value{first}, nil
 	}
 	if c != ':' {
 		return nil, p.error("Unrecognized array/map index")
 	}
 
-	p.position++ //consume the :
+	p.position++
 	second, err := p.ReadValue()
 	if err != nil {
 		return nil, err
 	}
-
 	if c = p.SkipSpaces(); c != ']' {
 		return nil, p.error("Expected closing array/map bracket")
 	}

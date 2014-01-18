@@ -168,26 +168,31 @@ func (p *Parser) ReadDynamic(negate bool) (Value, error) {
 	fields := make([]string, 0, 5)
 	types := make([]DynamicFieldType, 0, 5)
 	args := make([][]Value, 0, 5)
-	for ; p.position < p.end; p.position++ {
+	for ; p.position < p.end; {
 		c := p.data[p.position]
 		if (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_' {
+			p.position++
 			continue
+		}
+		if c == ' ' {
+			start++
+			p.position++
+			continue
+		}
+		if start == p.position {
+			break
 		}
 		field := string(bytes.ToLower(p.data[start:p.position]))
 		isEnd := c != '.' && c != '(' && c != '['
 		if c == '.' || isEnd {
-			if isEnd && p.position-start == 1 {
-				break
-			}
 			fields = append(fields, field)
 			types = append(types, FieldType)
 			args = append(args, nil)
-			start = p.position + 1
 			if isEnd {
 				break
 			}
+			p.position++
 		} else if c == '[' {
-			println(field)
 			fields = append(fields, field)
 			types = append(types, IndexedType)
 			p.position++
@@ -196,7 +201,6 @@ func (p *Parser) ReadDynamic(negate bool) (Value, error) {
 				return nil, err
 			}
 			args = append(args, arg)
-			start = p.position
 		} else if c == '(' {
 			fields = append(fields, field)
 			types = append(types, MethodType)
@@ -206,8 +210,8 @@ func (p *Parser) ReadDynamic(negate bool) (Value, error) {
 				return nil, err
 			}
 			args = append(args, arg)
-			start = p.position + 1
 		}
+		start = p.position
 	}
 	return &DynamicValue{fields, types, args}, nil
 }
@@ -223,11 +227,13 @@ func (p *Parser) ReadIndexing() ([]Value, error) {
 		return nil, err
 	}
 	if implicitStart {
+		p.position++
 		return []Value{&StaticValue{0}, first}, nil
 	}
 
 	c := p.SkipSpaces()
 	if c == ']' {
+		p.position++
 		return []Value{first}, nil
 	}
 	if c != ':' {
@@ -236,6 +242,7 @@ func (p *Parser) ReadIndexing() ([]Value, error) {
 
 	p.position++
 	if p.SkipSpaces() == ']' {
+		p.position++
 		return []Value{first}, nil
 	}
 	second, err := p.ReadValue()
@@ -246,11 +253,13 @@ func (p *Parser) ReadIndexing() ([]Value, error) {
 	if c = p.SkipSpaces(); c != ']' {
 		return nil, p.error("Expected closing array/map bracket")
 	}
+	p.position++
 	return []Value{first, second}, nil
 }
 
 func (p *Parser) ReadArgs() ([]Value, error) {
 	if p.data[p.position] == ')' {
+		p.position++
 		return nil, nil
 	}
 
@@ -263,6 +272,7 @@ func (p *Parser) ReadArgs() ([]Value, error) {
 		values = append(values, value)
 		c := p.SkipSpaces()
 		if c == ')' {
+			p.position++
 			break
 		}
 		if c != ',' {

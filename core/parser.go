@@ -174,9 +174,16 @@ func (p *Parser) ReadDynamic(negate bool) (Value, error) {
 			}
 			args = append(args, arg)
 			start = p.position
-		// } else if c == '(' {
-		// 	fields = append(fields, p.data[start:p.position])
-		// 	types = append(types, MethodType)
+		} else if c == '(' {
+			fields = append(fields, string(p.data[start:p.position]))
+			types = append(types, MethodType)
+			p.position++
+			arg, err := p.ReadArgs()
+			if err != nil {
+				return nil, err
+			}
+			args = append(args, arg)
+			start = p.position
 		}
 	}
 	return &DynamicValue{fields, types, args}, nil
@@ -205,6 +212,29 @@ func (p *Parser) ReadIndexing() ([]Value, error) {
 		return nil, p.error("Expected closing array/map bracket")
 	}
 	return []Value{first, second}, nil
+}
+
+func (p *Parser) ReadArgs() ([]Value, error) {
+	if p.data[p.position] == ')' {
+		return nil, nil
+	}
+
+	values := make([]Value, 0, 3)
+	for {
+		value, err := p.ReadValue()
+		if err != nil {
+			return nil, err
+		}
+		values = append(values, value)
+		c := p.SkipSpaces()
+		if c == ')' {
+			break
+		}
+		if c != ',' {
+			return nil, p.error("Invalid argument list given to function")
+		}
+	}
+	return values, nil
 }
 
 func (p *Parser) ReadTagType() TagType {

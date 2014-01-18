@@ -37,6 +37,7 @@ func (v *DynamicValue) Resolve(context *Context) interface{} {
 
 		name := v.names[i]
 		t := v.types[i]
+
 		if t == FieldType || t == IndexedType {
 			if d = r.ResolveField(d, name); d == nil {
 				return nil
@@ -45,6 +46,10 @@ func (v *DynamicValue) Resolve(context *Context) interface{} {
 				if d = unindex(d, v.args[i], context); d == nil {
 					return nil
 				}
+			}
+		} else if t == MethodType {
+			if d = run(d, name, v.args[i], context); d == nil {
+				return nil
 			}
 		}
 	}
@@ -83,6 +88,28 @@ func unindex(container interface{}, params []Value, context *Context) interface{
 	} else if kind == reflect.Map {
 		indexValue := reflect.ValueOf(params[0].Resolve(context))
 		return value.MapIndex(indexValue).Interface()
+	}
+	return nil
+}
+
+func run(container interface{}, name string, params []Value, context *Context) interface{} {
+	c := reflect.ValueOf(container)
+	m := c.MethodByName(name)
+	if m.IsValid() == false {
+		return nil
+	}
+	var returns []reflect.Value
+	if len(params) == 0 {
+		returns = m.Call(nil)
+	} else {
+		v := make([]reflect.Value, len(params))
+		for index, param := range params {
+			v[index] = reflect.ValueOf(param.Resolve(context))
+		}
+		returns = m.Call(v)
+	}
+	if len(returns) > 0 {
+		return returns[0].Interface()
 	}
 	return nil
 }

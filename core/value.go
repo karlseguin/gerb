@@ -56,7 +56,6 @@ func (v *DynamicValue) Resolve(context *Context) interface{} {
 	return r.ResolveFinal(d)
 }
 
-
 func unindex(container interface{}, params []Value, context *Context) interface{} {
 	valueLength := len(params)
 	if valueLength == 0 {
@@ -94,21 +93,17 @@ func unindex(container interface{}, params []Value, context *Context) interface{
 
 func run(container interface{}, name string, params []Value, context *Context) interface{} {
 	c := reflect.ValueOf(container)
-	m := c.MethodByName(name)
+	m := r.Method(c, name)
 	if m.IsValid() == false {
 		return nil
 	}
-	var returns []reflect.Value
-	if len(params) == 0 {
-		returns = m.Call(nil)
-	} else {
-		v := make([]reflect.Value, len(params))
-		for index, param := range params {
-			v[index] = reflect.ValueOf(param.Resolve(context))
-		}
-		returns = m.Call(v)
+
+	v := make([]reflect.Value, len(params)+1)
+	v[0] = c
+	for index, param := range params {
+		v[index+1] = reflect.ValueOf(param.Resolve(context))
 	}
-	if len(returns) > 0 {
+	if returns := m.Call(v); len(returns) > 0 {
 		return returns[0].Interface()
 	}
 	return nil

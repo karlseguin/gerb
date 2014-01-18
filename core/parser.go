@@ -50,11 +50,11 @@ func (p *Parser) ReadValue() (Value, error) {
 		return nil, p.error("Expected value, got nothing")
 	}
 	if first >= '0' && first <= '9' {
-		 value, err = p.ReadNumber(negate)
+		value, err = p.ReadNumber(negate)
 	} else if first == '\'' {
 		value, err = p.ReadChar(negate)
 	} else if first == '"' {
-		value, err =  p.ReadString(negate)
+		value, err = p.ReadString(negate)
 	} else {
 		value, err = p.ReadDynamic(negate)
 	}
@@ -168,7 +168,7 @@ func (p *Parser) ReadDynamic(negate bool) (Value, error) {
 	fields := make([]string, 0, 5)
 	types := make([]DynamicFieldType, 0, 5)
 	args := make([][]Value, 0, 5)
-	for ;p.position < p.end; p.position++ {
+	for ; p.position < p.end; p.position++ {
 		c := p.data[p.position]
 		if (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_' {
 			continue
@@ -176,13 +176,13 @@ func (p *Parser) ReadDynamic(negate bool) (Value, error) {
 		field := string(bytes.ToLower(p.data[start:p.position]))
 		isEnd := c != '.' && c != '(' && c != '['
 		if c == '.' || isEnd {
-			if isEnd && p.position - start == 1 {
+			if isEnd && p.position-start == 1 {
 				break
 			}
 			fields = append(fields, field)
 			types = append(types, FieldType)
 			args = append(args, nil)
-			start = p.position+1
+			start = p.position + 1
 			if isEnd {
 				break
 			}
@@ -206,7 +206,7 @@ func (p *Parser) ReadDynamic(negate bool) (Value, error) {
 				return nil, err
 			}
 			args = append(args, arg)
-			start = p.position+1
+			start = p.position + 1
 		}
 	}
 	return &DynamicValue{fields, types, args}, nil

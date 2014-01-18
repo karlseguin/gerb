@@ -28,7 +28,7 @@ const (
 type DynamicValue struct {
 	names []string
 	types []DynamicFieldType
-	args [][]Value
+	args  [][]Value
 }
 
 func (v *DynamicValue) Resolve(context *Context) interface{} {

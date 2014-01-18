@@ -1,9 +1,9 @@
 package r
 
 import (
-	"sync"
-	"strings"
 	"reflect"
+	"strings"
+	"sync"
 )
 
 var (
@@ -31,4 +31,3 @@ func buildMethodData(t reflect.Type) map[string]reflect.Value {
 	}
 	return data
 }
-

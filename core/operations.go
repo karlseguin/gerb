@@ -35,8 +35,8 @@ func ModuloOperation(a, b Value) Value {
 }
 
 type AdditiveValue struct {
-	a Value
-	b Value
+	a      Value
+	b      Value
 	negate bool
 }
 
@@ -45,14 +45,18 @@ func (v *AdditiveValue) Resolve(context *Context) interface{} {
 	b := v.b.Resolve(context)
 	if na, ok := r.ToInt(a); ok {
 		if nb, ok := r.ToInt(b); ok {
-			if v.negate { nb = -nb }
+			if v.negate {
+				nb = -nb
+			}
 			return na + nb
 		}
 		return 0
 	}
 	if fa, ok := r.ToFloat(a); ok {
 		if fb, ok := r.ToFloat(b); ok {
-			if v.negate { fb = -fb }
+			if v.negate {
+				fb = -fb
+			}
 			return fa + fb
 		}
 		return 0
@@ -61,8 +65,8 @@ func (v *AdditiveValue) Resolve(context *Context) interface{} {
 }
 
 type MultiplicativeValue struct {
-	a Value
-	b Value
+	a      Value
+	b      Value
 	divide bool
 }
 

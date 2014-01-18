@@ -1,13 +1,13 @@
 package gerb
 
 import (
+	"bytes"
 	"github.com/karlseguin/gerb/core"
 	"github.com/karlseguin/gerb/r"
-	"bytes"
 )
 
 type OutputTag struct {
-	value core.Value
+	value      core.Value
 	autoEscape bool
 }
 
@@ -32,6 +32,7 @@ func createOutputTag(p *core.Parser, isUnsafe bool) (core.Code, error) {
 }
 
 const escapedChars = "<>"
+
 func escape(b []byte) []byte {
 	var buf bytes.Buffer
 	i := bytes.IndexAny(b, escapedChars)

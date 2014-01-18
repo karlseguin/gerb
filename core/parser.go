@@ -213,9 +213,17 @@ func (p *Parser) ReadDynamic(negate bool) (Value, error) {
 }
 
 func (p *Parser) ReadIndexing() ([]Value, error) {
+	implicitStart := false
+	if p.SkipSpaces() == ':' {
+		implicitStart = true
+		p.position++
+	}
 	first, err := p.ReadValue()
 	if err != nil {
 		return nil, err
+	}
+	if implicitStart {
+		return []Value{&StaticValue{0}, first}, nil
 	}
 
 	c := p.SkipSpaces()
@@ -227,10 +235,14 @@ func (p *Parser) ReadIndexing() ([]Value, error) {
 	}
 
 	p.position++
+	if p.SkipSpaces() == ']' {
+		return []Value{first}, nil
+	}
 	second, err := p.ReadValue()
 	if err != nil {
 		return nil, err
 	}
+
 	if c = p.SkipSpaces(); c != ']' {
 		return nil, p.error("Expected closing array/map bracket")
 	}

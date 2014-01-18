@@ -168,17 +168,17 @@ func (p *Parser) ReadDynamic(negate bool) (Value, error) {
 	fields := make([]string, 0, 5)
 	types := make([]DynamicFieldType, 0, 5)
 	args := make([][]Value, 0, 5)
-	for ; p.position < p.end; {
+	for p.position < p.end {
 		c := p.data[p.position]
 		if (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_' {
 			p.position++
 			continue
 		}
-		if c == ' ' {
-			start++
-			p.position++
-			continue
-		}
+		// if c == ' ' {
+		// 	start++
+		// 	p.position++
+		// 	continue
+		// }
 		if start == p.position {
 			break
 		}

@@ -7,6 +7,9 @@ import (
 
 // Convert arbitrary data to []byte
 func ToBytes(data interface{}) []byte {
+	if data == nil {
+		return []byte("!nil!")
+	}
 	switch typed := data.(type) {
 	case byte:
 		return []byte{typed}
@@ -66,6 +69,9 @@ func ToFloat(data interface{}) (float64, bool) {
 	case float32:
 		return float64(typed), true
 	default:
+		if n, ok := ToInt(data); ok {
+			return float64(n), true
+		}
 		return 0, false
 	}
 }

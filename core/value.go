@@ -3,7 +3,6 @@ package core
 import (
 	"github.com/karlseguin/gerb/r"
 	"reflect"
-	"fmt"
 )
 
 type Value interface {
@@ -33,7 +32,6 @@ type DynamicValue struct {
 }
 
 func (v *DynamicValue) Resolve(context *Context) interface{} {
-	fmt.Println(v.names)
 	var d interface{} = context.Data
 	for i, l := 0, len(v.names); i < l; i++ {
 		name := v.names[i]
@@ -77,7 +75,7 @@ func unindex(container interface{}, params []Value, context *Context) interface{
 		}
 		if first < 0 {
 			first = 0
-		} else if first > length - 1 {
+		} else if first > length-1 {
 			first = length
 		}
 		second := length

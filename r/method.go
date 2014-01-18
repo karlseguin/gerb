@@ -20,7 +20,7 @@ func Method(value reflect.Value, name string) reflect.Value {
 	if exists == false {
 		data = buildMethodData(t)
 	}
-	return data[strings.ToLower(name)]
+	return data[name]
 }
 
 func buildMethodData(t reflect.Type) map[string]reflect.Value {

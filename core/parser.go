@@ -44,19 +44,37 @@ func (p *Parser) ReadValue() (Value, error) {
 		p.position++
 		first = p.SkipSpaces()
 	}
+	var value Value
+	var err error
 	if first == 0 {
-		return nil, p.error("Unrecognized value in output tag")
+		return nil, p.error("Expected value, got nothing")
 	}
 	if first >= '0' && first <= '9' {
-		return p.ReadNumber(negate)
+		 value, err = p.ReadNumber(negate)
+	} else if first == '\'' {
+		value, err = p.ReadChar(negate)
+	} else if first == '"' {
+		value, err =  p.ReadString(negate)
+	} else {
+		value, err = p.ReadDynamic(negate)
 	}
-	if first == '\'' {
-		return p.ReadChar(negate)
+	if err != nil {
+		return nil, err
 	}
-	if first == '"' {
-		return p.ReadString(negate)
+	c1 := p.SkipSpaces()
+	if c1 == '%' && p.data[p.position+1] == '>' {
+		return value, nil
 	}
-	return p.ReadDynamic(negate)
+	factory, ok := Operations[c1]
+	if ok == false {
+		return value, nil
+	}
+	p.position++
+	right, err := p.ReadValue()
+	if err != nil {
+		return nil, err
+	}
+	return factory(value, right), nil
 }
 
 func (p *Parser) ReadNumber(negate bool) (Value, error) {
@@ -152,12 +170,16 @@ func (p *Parser) ReadDynamic(negate bool) (Value, error) {
 	args := make([][]Value, 0, 5)
 	for ;p.position < p.end; p.position++ {
 		c := p.data[p.position]
-		isEnd := c == ' ' || c == '%' || c == ':' || c == ']'
+		if (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_' {
+			continue
+		}
+		field := string(bytes.ToLower(p.data[start:p.position]))
+		isEnd := c != '.' && c != '(' && c != '['
 		if c == '.' || isEnd {
 			if isEnd && p.position - start == 1 {
 				break
 			}
-			fields = append(fields, string(p.data[start:p.position]))
+			fields = append(fields, field)
 			types = append(types, FieldType)
 			args = append(args, nil)
 			start = p.position+1
@@ -165,7 +187,8 @@ func (p *Parser) ReadDynamic(negate bool) (Value, error) {
 				break
 			}
 		} else if c == '[' {
-			fields = append(fields, string(p.data[start:p.position]))
+			println(field)
+			fields = append(fields, field)
 			types = append(types, IndexedType)
 			p.position++
 			arg, err := p.ReadIndexing()
@@ -175,7 +198,7 @@ func (p *Parser) ReadDynamic(negate bool) (Value, error) {
 			args = append(args, arg)
 			start = p.position
 		} else if c == '(' {
-			fields = append(fields, string(p.data[start:p.position]))
+			fields = append(fields, field)
 			types = append(types, MethodType)
 			p.position++
 			arg, err := p.ReadArgs()
@@ -183,7 +206,7 @@ func (p *Parser) ReadDynamic(negate bool) (Value, error) {
 				return nil, err
 			}
 			args = append(args, arg)
-			start = p.position
+			start = p.position+1
 		}
 	}
 	return &DynamicValue{fields, types, args}, nil

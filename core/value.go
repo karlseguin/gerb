@@ -38,14 +38,18 @@ func (v *DynamicValue) Resolve(context *Context) interface{} {
 		name := v.names[i]
 		t := v.types[i]
 
-		if t == FieldType || t == IndexedType {
+		if t == FieldType {
 			if d = r.ResolveField(d, name); d == nil {
 				return nil
 			}
-			if t == IndexedType {
-				if d = unindex(d, v.args[i], context); d == nil {
+		} else if t == IndexedType {
+			if len(name) > 0 {
+				if d = r.ResolveField(d, name); d == nil {
 					return nil
 				}
+			}
+			if d = unindex(d, v.args[i], context); d == nil {
+				return nil
 			}
 		} else if t == MethodType {
 			if d = run(d, name, v.args[i], context); d == nil {
@@ -97,7 +101,6 @@ func run(container interface{}, name string, params []Value, context *Context) i
 	if m.IsValid() == false {
 		return nil
 	}
-
 	v := make([]reflect.Value, len(params)+1)
 	v[0] = c
 	for index, param := range params {

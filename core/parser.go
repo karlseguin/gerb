@@ -56,7 +56,7 @@ func (p *Parser) ReadValue() (Value, error) {
 	if first == '"' {
 		return p.ReadString(negate)
 	}
-	return nil, nil
+	return p.ReadDynamic(negate)
 }
 
 func (p *Parser) ReadNumber(negate bool) (Value, error) {
@@ -143,6 +143,69 @@ func (p *Parser) ReadString(negate bool) (Value, error) {
 	}
 	p.position++ //consume the "
 	return &StaticValue{string(data)}, nil
+}
+
+func (p *Parser) ReadDynamic(negate bool) (Value, error) {
+	start := p.position
+	fields := make([]string, 0, 5)
+	types := make([]DynamicFieldType, 0, 5)
+	args := make([][]Value, 0, 5)
+	for ;p.position < p.end; p.position++ {
+		c := p.data[p.position]
+		isEnd := c == ' ' || c == '%' || c == ']'
+		if c == '.' || isEnd {
+			if isEnd && p.position - start == 1 {
+				break
+			}
+			fields = append(fields, string(p.data[start:p.position]))
+			types = append(types, FieldType)
+			args = append(args, nil)
+			start = p.position+1
+			if isEnd {
+				break
+			}
+		} else if c == '[' {
+			fields = append(fields, string(p.data[start:p.position]))
+			types = append(types, IndexedType)
+			p.position++
+			arg, err := p.ReadIndexing()
+			if err != nil {
+				return nil, err
+			}
+			args = append(args, arg)
+			start = p.position
+		// } else if c == '(' {
+		// 	fields = append(fields, p.data[start:p.position])
+		// 	types = append(types, MethodType)
+		}
+	}
+	return &DynamicValue{fields, types, args}, nil
+}
+
+func (p *Parser) ReadIndexing() ([]Value, error) {
+	first, err := p.ReadValue()
+	if err != nil {
+		return nil, err
+	}
+	c := p.SkipSpaces()
+	if c == ']' {
+		p.position++
+		return []Value{first}, nil
+	}
+	if c != ':' {
+		return nil, p.error("Unrecognized array/map index")
+	}
+
+	p.position++ //consume the :
+	second, err := p.ReadValue()
+	if err != nil {
+		return nil, err
+	}
+
+	if c = p.SkipSpaces(); c != ']' {
+		return nil, p.error("Expected closing array/map bracket")
+	}
+	return []Value{first, second}, nil
 }
 
 func (p *Parser) ReadTagType() TagType {

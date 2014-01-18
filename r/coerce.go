@@ -31,6 +31,18 @@ func ToBytes(data interface{}) []byte {
 }
 
 // Convert arbitrary data to string
+func ToString(data interface{}) string {
+	switch typed := data.(type) {
+	case string:
+		return typed
+	case fmt.Stringer:
+		return typed.String()
+	default:
+		return string(ToBytes(data))
+	}
+}
+
+// Convert arbitrary data to string
 func ToInt(data interface{}) (int, bool) {
 	switch typed := data.(type) {
 	case int:

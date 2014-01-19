@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/karlseguin/gspec"
+	"github.com/karlseguin/gerb/core"
 	"testing"
 )
 
@@ -78,6 +79,15 @@ func Test_RenderSlices(t *testing.T) {
 func Test_RenderSliceOfMethodReturn(t *testing.T) {
 	assertRender(t, `<%= user.Analysis(count)[0:5] %>`, `it's `)
 	assertRender(t, `<%= user.Analysis(count)[10:] %>`, `44!`)
+}
+
+func Test_UsesBuiltIns(t *testing.T) {
+	assertRender(t, `<%= len(user.name) %>`, `4`)
+}
+
+func Test_UsesCustomBuiltIns(t *testing.T) {
+	core.RegisterBuiltin("add", func(a, b int) int {return a + b})
+	assertRender(t, `<%= add(user.powerlevel, 10) %>`, `9010`)
 }
 
 func assertRender(t *testing.T, raw, expected string) {

@@ -33,6 +33,8 @@ type DynamicValue struct {
 
 func (v *DynamicValue) Resolve(context *Context) interface{} {
 	var d interface{} = context.Data
+	isRoot := true
+
 	for i, l := 0, len(v.names); i < l; i++ {
 		name := v.names[i]
 		t := v.types[i]
@@ -51,10 +53,11 @@ func (v *DynamicValue) Resolve(context *Context) interface{} {
 				return nil
 			}
 		} else if t == MethodType {
-			if d = run(d, name, v.args[i], context); d == nil {
+			if d = run(d, name, v.args[i], isRoot, context); d == nil {
 				return nil
 			}
 		}
+		isRoot = false
 	}
 	return r.ResolveFinal(d)
 }
@@ -96,7 +99,11 @@ func unindex(container interface{}, params []Value, context *Context) interface{
 	return nil
 }
 
-func run(container interface{}, name string, params []Value, context *Context) interface{} {
+func run(container interface{}, name string, params []Value, isRoot bool, context *Context) interface{} {
+	if isRoot {
+		return runBuiltIn(name, params, context)
+	}
+
 	c := reflect.ValueOf(container)
 	m := r.Method(c, name)
 	if m.IsValid() == false {
@@ -106,6 +113,22 @@ func run(container interface{}, name string, params []Value, context *Context) i
 	v[0] = c
 	for index, param := range params {
 		v[index+1] = reflect.ValueOf(param.Resolve(context))
+	}
+	if returns := m.Call(v); len(returns) > 0 {
+		return returns[0].Interface()
+	}
+	return nil
+}
+
+
+func runBuiltIn(name string, params []Value, context *Context) interface{} {
+	m, ok := Builtins[name]
+	if ok == false {
+		return nil
+	}
+	v := make([]reflect.Value, len(params))
+	for index, param := range params {
+		v[index] = reflect.ValueOf(param.Resolve(context))
 	}
 	if returns := m.Call(v); len(returns) > 0 {
 		return returns[0].Interface()

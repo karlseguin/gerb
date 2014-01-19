@@ -59,8 +59,8 @@ by much.
 
 ## Builtins
 Go's builtins aren't natively available. However, custom builtin functions can
-be registered. A custom buitlin `len` comes pre-registered. You can register
-your own builtin:
+be registered. The custom buitlin `len` comes pre-registered and behaves much
+like the real `len` builtin. You can register your own builtin:
 
     import "github.com/karlseguin/gerb/core"
     func init() {
@@ -71,3 +71,25 @@ your own builtin:
 
 The builtin isn't threadsafe. It's expected that you'll register your builtins
 at startup and then leave it alone.
+
+## Aliases and Package Functions
+In adddition to custom builtins, it is possible to alias package functions. This
+makes functions such as `strings.ToUpper` available to use.
+
+By default, many functions from the `strings` package in addition to
+`fmt.Sprintf` are available.
+
+Since Go doesn't make it possible to automatically reflect functions exposed from
+a package, registration must manually be done on a per-method basis. Like
+builtins, this process is not thread safe:
+
+    func init() {
+      core.Registerliases("strings",
+        "ToUpper", strings.ToUpper,
+        "ToLower", strings.ToLower,
+        ...
+      )
+      core.Registerliases("fmt",
+        "Sprintf", fmt.Sprintf
+      )
+    }

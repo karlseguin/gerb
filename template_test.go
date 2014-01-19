@@ -3,8 +3,8 @@ package gerb
 import (
 	"bytes"
 	"fmt"
-	"github.com/karlseguin/gspec"
 	"github.com/karlseguin/gerb/core"
+	"github.com/karlseguin/gspec"
 	"testing"
 )
 
@@ -13,7 +13,7 @@ func Test_RendersALiteral(t *testing.T) {
 }
 
 func Test_RendersAnIntegerOutput(t *testing.T) {
-	assertRender(t, ` <%= 9001 %>`, ` 9001`)
+	assertRender(t, ` <%= 9001%>`, ` 9001`)
 }
 
 func Test_RendersAnFloatOutput(t *testing.T) {
@@ -82,12 +82,18 @@ func Test_RenderSliceOfMethodReturn(t *testing.T) {
 }
 
 func Test_UsesBuiltIns(t *testing.T) {
-	assertRender(t, `<%= len(user.name) %>`, `3`)
+	assertRender(t, `<%= len(user.name) %>`, `4`)
 }
 
 func Test_UsesCustomBuiltIns(t *testing.T) {
-	core.RegisterBuiltin("add", func(a, b int) int {return a + b})
+	core.RegisterBuiltin("add", func(a, b int) int { return a + b })
 	assertRender(t, `<%= add(user.powerlevel, 10) %>`, `9011`)
+}
+
+func Test_UsesPreRegisteredPackages(t *testing.T) {
+	assertRender(t, `<%= strings.ToUpper(user.name) %>`, "GOKU")
+	assertRender(t, `<%= strings.IndexByte(user.name, 'O') %>`, "-1")
+	assertRender(t, `<%= strings.IndexByte(strings.ToUpper(user.name), 'O') %>`, "1")
 }
 
 func assertRender(t *testing.T, raw, expected string) {

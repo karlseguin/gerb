@@ -199,7 +199,7 @@ func (p *Parser) ReadDynamic(negate bool) (Value, error) {
 			return nil, err
 		}
 
-		if isEnd && p.data[start] == ' ' {
+		if isEnd && (p.data[start] == ' ' || start == p.position) {
 			break
 		}
 		fields = append(fields, field)

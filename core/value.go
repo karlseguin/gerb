@@ -34,6 +34,7 @@ type DynamicValue struct {
 func (v *DynamicValue) Resolve(context *Context) interface{} {
 	var d interface{} = context.Data
 	isRoot := true
+	isAlias := false
 
 	for i, l := 0, len(v.names); i < l; i++ {
 		name := v.names[i]
@@ -41,6 +42,14 @@ func (v *DynamicValue) Resolve(context *Context) interface{} {
 
 		if t == FieldType {
 			if d = r.ResolveField(d, name); d == nil {
+				if isRoot {
+					if alias, ok := Aliases[name]; ok {
+						d = alias
+						isAlias = true
+						isRoot = false
+						continue
+					}
+				}
 				return nil
 			}
 		} else if t == IndexedType {
@@ -53,7 +62,7 @@ func (v *DynamicValue) Resolve(context *Context) interface{} {
 				return nil
 			}
 		} else if t == MethodType {
-			if d = run(d, name, v.args[i], isRoot, context); d == nil {
+			if d = run(d, name, v.args[i], isRoot, isAlias, context); d == nil {
 				return nil
 			}
 		}
@@ -99,9 +108,12 @@ func unindex(container interface{}, params []Value, context *Context) interface{
 	return nil
 }
 
-func run(container interface{}, name string, params []Value, isRoot bool, context *Context) interface{} {
+func run(container interface{}, name string, params []Value, isRoot, isAlias bool, context *Context) interface{} {
 	if isRoot {
 		return runBuiltIn(name, params, context)
+	}
+	if isAlias {
+		return runAlias(container.(map[string]reflect.Value), name, params, context)
 	}
 
 	c := reflect.ValueOf(container)
@@ -121,7 +133,15 @@ func run(container interface{}, name string, params []Value, isRoot bool, contex
 }
 
 func runBuiltIn(name string, params []Value, context *Context) interface{} {
-	m, ok := Builtins[name]
+	return runFromLookup(Builtins, name, params, context)
+}
+
+func runAlias(pkg map[string]reflect.Value, name string, params []Value, context *Context) interface{} {
+	return runFromLookup(pkg, name, params, context)
+}
+
+func runFromLookup(lookup map[string]reflect.Value, name string, params []Value, context *Context) interface{} {
+	m, ok := lookup[name]
 	if ok == false {
 		return nil
 	}

@@ -2,6 +2,7 @@ package core
 
 import (
 	"github.com/karlseguin/gerb/r"
+	"time"
 )
 
 type OperationFactory func(a, b Value) Value
@@ -61,6 +62,14 @@ func (v *AdditiveValue) Resolve(context *Context) interface{} {
 		}
 		return 0
 	}
+	if ta, ok := a.(time.Duration); ok {
+		if tb, ok := b.(time.Duration); ok {
+			if v.negate {
+				return ta - tb
+			}
+			return ta + tb
+		}
+	}
 	return 0
 }
 
@@ -90,6 +99,14 @@ func (v *MultiplicativeValue) Resolve(context *Context) interface{} {
 			return fa * fb
 		}
 		return 0
+	}
+	if ta, ok := a.(time.Duration); ok {
+		if tb, ok := b.(time.Duration); ok {
+			if v.divide {
+				return ta / tb
+			}
+			return ta * tb
+		}
 	}
 	return 0
 }

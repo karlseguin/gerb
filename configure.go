@@ -4,7 +4,7 @@ import (
 	"github.com/karlseguin/gerb/core"
 )
 
-type Configuration struct {}
+type Configuration struct{}
 
 func Configure() *Configuration {
 	return new(Configuration)

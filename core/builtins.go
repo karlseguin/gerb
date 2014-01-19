@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-var Builtins = make(map[string]reflect.Value)
+var Builtins = make(map[string]interface{})
 
 func RegisterBuiltin(name string, f interface{}) {
 	Builtins[strings.ToLower(name)] = reflect.ValueOf(f)

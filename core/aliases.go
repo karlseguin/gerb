@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+	"time"
 )
 
 func init() {
@@ -47,31 +48,55 @@ func init() {
 
 	RegisterAlias("fmt",
 		"Sprintf", fmt.Sprintf)
+
+	RegisterAliases("time",
+		"Now", time.Now,
+		"Nanosecond", time.Nanosecond,
+		"Microsecond", time.Microsecond,
+		"Millisecond", time.Millisecond,
+		"Second", time.Second,
+		"Minute", time.Minute,
+		"Hour", time.Hour,
+		"Duration", (*time.Duration)(nil),
+	)
 }
 
-var Aliases = make(map[string]map[string]reflect.Value)
+var FunctionAliases = make(map[string]map[string]interface{})
+var OtherAliases = make(map[string]map[string]interface{})
 
-func RegisterAlias(packageName, functionName string, f interface{}) {
+func RegisterAlias(packageName, memberName string, f interface{}) {
 	packageName = strings.ToLower(packageName)
-	functionName = strings.ToLower(functionName)
-
-	pkg, ok := Aliases[packageName]
-	if ok == false {
-		pkg = make(map[string]reflect.Value)
-		Aliases[packageName] = pkg
+	memberName = strings.ToLower(memberName)
+	value := reflect.ValueOf(f)
+	if value.Kind() == reflect.Func {
+		registerFunctionAlias(packageName, memberName, value)
+	} else if value.Kind() == reflect.Ptr {
+		registerFunctionAlias(packageName, memberName, reflect.TypeOf(f).Elem())
+	} else {
+		registerOtherAlias(packageName, memberName, f)
 	}
-	pkg[functionName] = reflect.ValueOf(f)
 }
 
 func RegisterAliases(packageName string, data ...interface{}) {
-	packageName = strings.ToLower(packageName)
-	pkg, ok := Aliases[packageName]
-	if ok == false {
-		pkg = make(map[string]reflect.Value)
-		Aliases[packageName] = pkg
-	}
 	for i := 0; i < len(data); i += 2 {
-		functionName := strings.ToLower(data[i].(string))
-		pkg[functionName] = reflect.ValueOf(data[i+1])
+		RegisterAlias(packageName, data[i].(string), data[i+1])
 	}
+}
+
+func registerFunctionAlias(packageName, memberName string, value interface{}) {
+	pkg, ok := FunctionAliases[packageName]
+	if ok == false {
+		pkg = make(map[string]interface{})
+		FunctionAliases[packageName] = pkg
+	}
+	pkg[memberName] = value
+}
+
+func registerOtherAlias(packageName, memberName string, value interface{}) {
+	pkg, ok := OtherAliases[packageName]
+	if ok == false {
+		pkg = make(map[string]interface{})
+		OtherAliases[packageName] = pkg
+	}
+	pkg[memberName] = value
 }

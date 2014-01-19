@@ -1,9 +1,9 @@
 package core
 
 import (
+	"fmt"
 	"github.com/karlseguin/gerb/r"
 	"reflect"
-	"fmt"
 )
 
 type Value interface {
@@ -44,11 +44,15 @@ func (v *DynamicValue) Resolve(context *Context) interface{} {
 		if t == FieldType {
 			if d = r.ResolveField(d, name); d == nil {
 				if isRoot {
-					if alias, ok := Aliases[name]; ok {
+					if alias, ok := FunctionAliases[name]; ok {
 						d = alias
 						isAlias = true
 						isRoot = false
 						continue
+					}
+				} else if pkg, ok := OtherAliases[v.names[i-1]]; ok {
+					if alias, ok := pkg[name]; ok {
+						return alias
 					}
 				}
 				return v.loggedNil(i)
@@ -64,9 +68,10 @@ func (v *DynamicValue) Resolve(context *Context) interface{} {
 			}
 		} else if t == MethodType {
 			if d = run(d, name, v.args[i], isRoot, isAlias, context); d == nil {
-				return v.loggedNil(i)
+				return v.loggedNilMethod(i)
 			}
 		}
+		isAlias = false
 		isRoot = false
 	}
 	return r.ResolveFinal(d)
@@ -74,9 +79,18 @@ func (v *DynamicValue) Resolve(context *Context) interface{} {
 
 func (v *DynamicValue) loggedNil(index int) interface{} {
 	if index == 0 {
-		Log.Error(fmt.Sprintf("%s is not defined", v.names[index]))
+		Log.Error(fmt.Sprintf("%s is undefined", v.names[index]))
 	} else {
-		Log.Error(fmt.Sprintf("%s.%s is not defined", v.names[index-1], v.names[index]))
+		Log.Error(fmt.Sprintf("%s.%s is undefined", v.names[index-1], v.names[index]))
+	}
+	return nil
+}
+
+func (v *DynamicValue) loggedNilMethod(index int) interface{} {
+	if index == 0 {
+		Log.Error(fmt.Sprintf("%s is undefined", v.names[index]))
+	} else {
+		Log.Error(fmt.Sprintf("%s.%s is undefined or had undefined parameters", v.names[index-1], v.names[index]))
 	}
 	return nil
 }
@@ -119,11 +133,16 @@ func unindex(container interface{}, params []Value, context *Context) interface{
 }
 
 func run(container interface{}, name string, params []Value, isRoot, isAlias bool, context *Context) interface{} {
+	defer func() {
+		if r := recover(); r != nil {
+			Log.Error(r)
+		}
+	}()
 	if isRoot {
 		return runBuiltIn(name, params, context)
 	}
 	if isAlias {
-		return runAlias(container.(map[string]reflect.Value), name, params, context)
+		return runAlias(container.(map[string]interface{}), name, params, context)
 	}
 
 	c := reflect.ValueOf(container)
@@ -134,7 +153,11 @@ func run(container interface{}, name string, params []Value, isRoot, isAlias boo
 	v := make([]reflect.Value, len(params)+1)
 	v[0] = c
 	for index, param := range params {
-		v[index+1] = reflect.ValueOf(param.Resolve(context))
+		paramValue := reflect.ValueOf(param.Resolve(context))
+		if paramValue.IsValid() == false {
+			return nil
+		}
+		v[index+1] = paramValue
 	}
 	if returns := m.Call(v); len(returns) > 0 {
 		return returns[0].Interface()
@@ -146,21 +169,36 @@ func runBuiltIn(name string, params []Value, context *Context) interface{} {
 	return runFromLookup(Builtins, name, params, context)
 }
 
-func runAlias(pkg map[string]reflect.Value, name string, params []Value, context *Context) interface{} {
+func runAlias(pkg map[string]interface{}, name string, params []Value, context *Context) interface{} {
 	return runFromLookup(pkg, name, params, context)
 }
 
-func runFromLookup(lookup map[string]reflect.Value, name string, params []Value, context *Context) interface{} {
+func runFromLookup(lookup map[string]interface{}, name string, params []Value, context *Context) interface{} {
 	m, ok := lookup[name]
 	if ok == false {
 		return nil
 	}
-	v := make([]reflect.Value, len(params))
-	for index, param := range params {
-		v[index] = reflect.ValueOf(param.Resolve(context))
-	}
-	if returns := m.Call(v); len(returns) > 0 {
-		return returns[0].Interface()
+
+	switch typed := m.(type) {
+	case reflect.Value:
+		v := make([]reflect.Value, len(params))
+		for index, param := range params {
+			v[index] = reflect.ValueOf(param.Resolve(context))
+		}
+		if returns := typed.Call(v); len(returns) > 0 {
+			return returns[0].Interface()
+		}
+	case reflect.Type:
+		if len(params) != 1 {
+			Log.Error(fmt.Sprintf("Conversion to %s should have 1 parameter", name))
+			return nil
+		}
+		v := reflect.ValueOf(params[0].Resolve(context))
+		if v.Type().ConvertibleTo(typed) == false {
+			Log.Error(fmt.Sprintf("Cannot convert %s to %s", v.Type().Name(), typed.Name()))
+			return nil
+		}
+		return v.Convert(typed).Interface()
 	}
 	return nil
 }

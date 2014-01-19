@@ -31,8 +31,8 @@ It's safe to call `Render` from multiple threads.
 Gerb supports two types of output tags: escaped and non-escaped. The only difference
 is that escaped tags will have < and > characters HTML-escaped.
 
-  <%= "<script>alert('this will be escaped')</script>" %>
-  <%! "<script>alert('this won't be escaped')</script>" %>
+    <%= "<script>alert('this will be escaped')</script>" %>
+    <%! "<script>alert('this won't be escaped')</script>" %>
 
 ## Variables
 Gerb attempts to behave as close to Go as possible. The biggest difference is that

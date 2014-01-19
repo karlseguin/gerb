@@ -8,7 +8,7 @@ import (
 // Convert arbitrary data to []byte
 func ToBytes(data interface{}) []byte {
 	if data == nil {
-		return []byte("!nil!")
+		return []byte{}
 	}
 	switch typed := data.(type) {
 	case byte:

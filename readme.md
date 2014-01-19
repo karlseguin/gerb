@@ -109,3 +109,14 @@ values:
 
 It's up in the air.
 
+## Errors and Logs
+`Render` should never fail. By default, `Render` will log errors to stdout. This
+behavior can be changed. To disable all logging:
+
+    gerb.Configure().Logger(nil)
+
+Alternatively, to use your own logger:
+
+    gerb.Configure().Logger(new(MyLogger))
+
+Your logger must implement `Error(v ...interface{})`.

@@ -3,6 +3,7 @@ package core
 import (
 	"github.com/karlseguin/gerb/r"
 	"reflect"
+	"fmt"
 )
 
 type Value interface {
@@ -50,25 +51,34 @@ func (v *DynamicValue) Resolve(context *Context) interface{} {
 						continue
 					}
 				}
-				return nil
+				return v.loggedNil(i)
 			}
 		} else if t == IndexedType {
 			if len(name) > 0 {
 				if d = r.ResolveField(d, name); d == nil {
-					return nil
+					return v.loggedNil(i)
 				}
 			}
 			if d = unindex(d, v.args[i], context); d == nil {
-				return nil
+				return v.loggedNil(i)
 			}
 		} else if t == MethodType {
 			if d = run(d, name, v.args[i], isRoot, isAlias, context); d == nil {
-				return nil
+				return v.loggedNil(i)
 			}
 		}
 		isRoot = false
 	}
 	return r.ResolveFinal(d)
+}
+
+func (v *DynamicValue) loggedNil(index int) interface{} {
+	if index == 0 {
+		Log.Error(fmt.Sprintf("%s is not defined", v.names[index]))
+	} else {
+		Log.Error(fmt.Sprintf("%s.%s is not defined", v.names[index-1], v.names[index]))
+	}
+	return nil
 }
 
 func unindex(container interface{}, params []Value, context *Context) interface{} {

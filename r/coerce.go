@@ -56,6 +56,8 @@ func ToInt(data interface{}) (int, bool) {
 		return int(typed), true
 	case uint:
 		return int(typed), true
+	case byte:
+		return int(typed), true
 	default:
 		return 0, false
 	}

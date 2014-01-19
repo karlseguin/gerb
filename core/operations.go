@@ -3,6 +3,7 @@ package core
 import (
 	"github.com/karlseguin/gerb/r"
 	"time"
+	"fmt"
 )
 
 type OperationFactory func(a, b Value) Value
@@ -51,18 +52,15 @@ func (v *AdditiveValue) Resolve(context *Context) interface{} {
 			}
 			return na + nb
 		}
-		return 0
-	}
-	if fa, ok := r.ToFloat(a); ok {
+
+	} else if fa, ok := r.ToFloat(a); ok {
 		if fb, ok := r.ToFloat(b); ok {
 			if v.negate {
 				fb = -fb
 			}
 			return fa + fb
 		}
-		return 0
-	}
-	if ta, ok := a.(time.Duration); ok {
+	} else if ta, ok := a.(time.Duration); ok {
 		if tb, ok := b.(time.Duration); ok {
 			if v.negate {
 				return ta - tb
@@ -70,7 +68,10 @@ func (v *AdditiveValue) Resolve(context *Context) interface{} {
 			return ta + tb
 		}
 	}
-	return 0
+	if v.negate {
+		return loggedOperationNil(a, b, "-", 0)
+	}
+	return loggedOperationNil(a, b, "+", 0)
 }
 
 type MultiplicativeValue struct {
@@ -89,18 +90,14 @@ func (v *MultiplicativeValue) Resolve(context *Context) interface{} {
 			}
 			return na * nb
 		}
-		return 0
-	}
-	if fa, ok := r.ToFloat(a); ok {
+	} else if fa, ok := r.ToFloat(a); ok {
 		if fb, ok := r.ToFloat(b); ok {
 			if v.divide {
 				return fa / fb
 			}
 			return fa * fb
 		}
-		return 0
-	}
-	if ta, ok := a.(time.Duration); ok {
+	} else if ta, ok := a.(time.Duration); ok {
 		if tb, ok := b.(time.Duration); ok {
 			if v.divide {
 				return ta / tb
@@ -108,7 +105,10 @@ func (v *MultiplicativeValue) Resolve(context *Context) interface{} {
 			return ta * tb
 		}
 	}
-	return 0
+	if v.divide {
+		return loggedOperationNil(a, b, "/", 0)
+	}
+	return loggedOperationNil(a, b, "*", 0)
 }
 
 type ModulatedValue struct {
@@ -124,5 +124,10 @@ func (v *ModulatedValue) Resolve(context *Context) interface{} {
 			return na % nb
 		}
 	}
-	return 0
+	return loggedOperationNil(a, b, "%", 0)
+}
+
+func loggedOperationNil(a, b interface{}, sign string, r interface{}) interface{} {
+	Log.Error(fmt.Sprintf("%v %s %v failed, invalid types", a, sign, b))
+	return r
 }

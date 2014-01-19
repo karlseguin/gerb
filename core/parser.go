@@ -275,6 +275,7 @@ func (p *Parser) ReadArgs() ([]Value, error) {
 		if c != ',' {
 			return nil, p.error("Invalid argument list given to function")
 		}
+		p.position++
 	}
 	return values, nil
 }

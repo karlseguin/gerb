@@ -87,7 +87,7 @@ func Test_UsesBuiltIns(t *testing.T) {
 
 func Test_UsesCustomBuiltIns(t *testing.T) {
 	core.RegisterBuiltin("add", func(a, b int) int {return a + b})
-	assertRender(t, `<%= add(user.powerlevel, 10) %>`, `9010`)
+	assertRender(t, `<%= add(user.powerlevel, 10) %>`, `9011`)
 }
 
 func assertRender(t *testing.T, raw, expected string) {

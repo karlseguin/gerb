@@ -6,33 +6,6 @@ import (
 	"strings"
 )
 
-var Aliases = make(map[string]map[string]reflect.Value)
-
-func RegisterAlias(packageName, functionName string, f interface{}) {
-	packageName = strings.ToLower(packageName)
-	functionName = strings.ToLower(functionName)
-
-	pkg, ok := Aliases[packageName]
-	if ok == false {
-		pkg = make(map[string]reflect.Value)
-		Aliases[packageName] = pkg
-	}
-	pkg[functionName] = reflect.ValueOf(f)
-}
-
-func RegisterAliases(packageName string, data ...interface{}) {
-	packageName = strings.ToLower(packageName)
-	pkg, ok := Aliases[packageName]
-	if ok == false {
-		pkg = make(map[string]reflect.Value)
-		Aliases[packageName] = pkg
-	}
-	for i := 0; i < len(data); i += 2 {
-		functionName := strings.ToLower(data[i].(string))
-		pkg[functionName] = reflect.ValueOf(data[i+1])
-	}
-}
-
 func init() {
 	RegisterAliases("strings",
 		"ToUpper", strings.ToUpper,
@@ -74,4 +47,31 @@ func init() {
 
 	RegisterAlias("fmt",
 		"Sprintf", fmt.Sprintf)
+}
+
+var Aliases = make(map[string]map[string]reflect.Value)
+
+func RegisterAlias(packageName, functionName string, f interface{}) {
+	packageName = strings.ToLower(packageName)
+	functionName = strings.ToLower(functionName)
+
+	pkg, ok := Aliases[packageName]
+	if ok == false {
+		pkg = make(map[string]reflect.Value)
+		Aliases[packageName] = pkg
+	}
+	pkg[functionName] = reflect.ValueOf(f)
+}
+
+func RegisterAliases(packageName string, data ...interface{}) {
+	packageName = strings.ToLower(packageName)
+	pkg, ok := Aliases[packageName]
+	if ok == false {
+		pkg = make(map[string]reflect.Value)
+		Aliases[packageName] = pkg
+	}
+	for i := 0; i < len(data); i += 2 {
+		functionName := strings.ToLower(data[i].(string))
+		pkg[functionName] = reflect.ValueOf(data[i+1])
+	}
 }

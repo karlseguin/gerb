@@ -19,7 +19,7 @@ There are three available methods for creating a template:
 3. ParseFile(path string, useCache bool)
 
 Unless `useCache` is set to `false`, an internal cache is used to avoid having
-to reparse the same content (based on the content's hash). The cache is currently
+to parse the same content (based on the content's hash). The cache is currently
 dumb and will hold onto references forever.
 
 Once you have a template, you use the `Render` method to output the template
@@ -52,7 +52,7 @@ For example, the following works:
     <%= user.Analysis(count)[start+7:] %>
 
 +, -, /, * and % are the only support operations. Currently (and sadly) order of
-precendence is left to right and parenthesis cannot be used.
+precedence is left to right and parenthesis cannot be used.
 
 Gerb might occasionally be a little less strict with type conversions, but not
 by much.
@@ -73,7 +73,7 @@ The builtin isn't threadsafe. It's expected that you'll register your builtins
 at startup and then leave it alone.
 
 ## Aliases and Package Functions
-In adddition to custom builtins, it is possible to alias package functions. This
+In addition to custom builtins, it is possible to alias package functions. This
 makes functions such as `strings.ToUpper` available to use.
 
 By default, many functions from the `strings` package in addition to
@@ -84,12 +84,12 @@ a package, registration must manually be done on a per-method basis. Like
 builtins, this process is not thread safe:
 
     func init() {
-      core.Registerliases("strings",
+      core.RegisterAliases("strings",
         "ToUpper", strings.ToUpper,
         "ToLower", strings.ToLower,
         ...
       )
-      core.Registerliases("fmt",
+      core.RegisterAliases("fmt",
         "Sprintf", fmt.Sprintf
       )
     }

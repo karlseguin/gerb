@@ -82,7 +82,7 @@ func Test_RenderSliceOfMethodReturn(t *testing.T) {
 }
 
 func Test_UsesBuiltIns(t *testing.T) {
-	assertRender(t, `<%= len(user.name) %>`, `4`)
+	assertRender(t, `<%= len(user.name) %>`, `3`)
 }
 
 func Test_UsesCustomBuiltIns(t *testing.T) {

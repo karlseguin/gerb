@@ -36,7 +36,7 @@ type Template struct {
 	*core.NormalContainer
 }
 
-func (t *Template) Render(writer io.Writer, data interface{}) {
+func (t *Template) Render(writer io.Writer, data map[string]interface{}) {
 	if data == nil {
 		data = make(map[string]interface{})
 	}

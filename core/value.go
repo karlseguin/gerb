@@ -120,7 +120,6 @@ func run(container interface{}, name string, params []Value, isRoot bool, contex
 	return nil
 }
 
-
 func runBuiltIn(name string, params []Value, context *Context) interface{} {
 	m, ok := Builtins[name]
 	if ok == false {

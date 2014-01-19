@@ -94,6 +94,9 @@ builtins, this process is not thread safe:
       )
     }
 
+You can see a list of what's currently aliased by looking at
+<https://github.com/karlseguin/gerb/blob/master/core/aliases.go>
+
 ## Multiple Return Values
 If you call a function which returns multiple values, only the first value is
 considered/returned.

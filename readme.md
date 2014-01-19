@@ -19,8 +19,8 @@ There are three available methods for creating a template:
 3. ParseFile(path string, useCache bool)
 
 Unless `useCache` is set to `false`, an internal cache is used to avoid having
-to parse the same content (based on the content's hash). The cache is currently
-dumb and will hold onto references forever.
+to parse the same content (based on the content's hash). The cache will
+automatically evict old items.
 
 Once you have a template, you use the `Render` method to output the template
 to the specified `io.Writer` using the specified data. Data must be a `map[string]interface{}`.

@@ -3,8 +3,12 @@ package gerb
 import (
 	"crypto/sha1"
 	"fmt"
+	"github.com/karlseguin/ccache"
 	"io/ioutil"
+	"time"
 )
+
+var cache = ccache.New(ccache.Configure().Size(1024 * 1024 * 10))
 
 // Parse the bytes into a gerb template
 func Parse(data []byte, useCache bool) (*Template, error) {
@@ -15,15 +19,16 @@ func Parse(data []byte, useCache bool) (*Template, error) {
 	hasher.Write(data)
 	key := fmt.Sprintf("%x", hasher.Sum(nil))
 
-	template := cache.get(key)
-	if template == nil {
-		var err error
-		template, err = newTemplate(data)
-		if err != nil {
-			return nil, err
-		}
-		cache.set(key, template)
+	t := cache.Get(key)
+	if t != nil {
+		return t.(*Template), nil
 	}
+
+	template, err := newTemplate(data)
+	if err != nil {
+		return nil, err
+	}
+	cache.Set(key, template, time.Hour)
 	return template, nil
 }
 

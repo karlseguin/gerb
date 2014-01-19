@@ -174,42 +174,39 @@ func (p *Parser) ReadDynamic(negate bool) (Value, error) {
 			p.position++
 			continue
 		}
-		// if c == ' ' {
-		// 	start++
-		// 	p.position++
-		// 	continue
-		// }
-		if start == p.position {
+		field := string(bytes.ToLower(p.data[start:p.position]))
+		var t DynamicFieldType
+		var a []Value
+		var err error
+		isEnd := c != '.' && c != '(' && c != '['
+		if c == '.' {
+			t = FieldType
+			a = nil
+			p.position++
+		} else if isEnd {
+			t = FieldType
+			a = nil
+		} else if c == '[' {
+			t = IndexedType
+			p.position++
+			a, err = p.ReadIndexing()
+		} else if c == '(' {
+			t = MethodType
+			p.position++
+			a, err = p.ReadArgs()
+		}
+		if err != nil {
+			return nil, err
+		}
+
+		if isEnd && p.data[start] == ' ' {
 			break
 		}
-		field := string(bytes.ToLower(p.data[start:p.position]))
-		isEnd := c != '.' && c != '(' && c != '['
-		if c == '.' || isEnd {
-			fields = append(fields, field)
-			types = append(types, FieldType)
-			args = append(args, nil)
-			if isEnd {
-				break
-			}
-			p.position++
-		} else if c == '[' {
-			fields = append(fields, field)
-			types = append(types, IndexedType)
-			p.position++
-			arg, err := p.ReadIndexing()
-			if err != nil {
-				return nil, err
-			}
-			args = append(args, arg)
-		} else if c == '(' {
-			fields = append(fields, field)
-			types = append(types, MethodType)
-			p.position++
-			arg, err := p.ReadArgs()
-			if err != nil {
-				return nil, err
-			}
-			args = append(args, arg)
+		fields = append(fields, field)
+		types = append(types, t)
+		args = append(args, a)
+		if isEnd {
+			break
 		}
 		start = p.position
 	}
@@ -343,8 +340,8 @@ func (p *Parser) Prev() byte {
 	return p.data[p.position-1]
 }
 
-func (p *Parser) Dump() {
-	fmt.Println(string(p.data[p.position:]))
+func (p *Parser) Dump(prefix string) {
+	fmt.Println(prefix, ": ", string(p.data[p.position:]))
 }
 
 func (p *Parser) error(s string) error {

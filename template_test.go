@@ -59,6 +59,11 @@ func Test_RendersAnObjectsFields(t *testing.T) {
 	assertRender(t, `<%= user.Name %>`, `Goku`)
 }
 
+func Test_RendersAnNestedObjectsFields(t *testing.T) {
+	// assertRender(t, `<%= user.sensei %>`, `Roshi`)
+	assertRender(t, `<%= user.sensei.name %>`, `Roshi`)
+}
+
 func Test_RendersAnObjectsMethod(t *testing.T) {
 	assertRender(t, `<%= user.Analysis(9000) %>`, `it's over 9000!`)
 }
@@ -71,8 +76,8 @@ func Test_RenderSlices(t *testing.T) {
 }
 
 func Test_RenderSliceOfMethodReturn(t *testing.T) {
-	// assertRender(t, `<%= user.Analysis(count)[0:5] %>`, `it's`)
-	// assertRender(t, `<%= user.Analysis(count)[10:] %>`, `ok`)
+	assertRender(t, `<%= user.Analysis(count)[0:5] %>`, `it's `)
+	assertRender(t, `<%= user.Analysis(count)[10:] %>`, `44!`)
 }
 
 func assertRender(t *testing.T, raw, expected string) {
@@ -82,21 +87,26 @@ func assertRender(t *testing.T, raw, expected string) {
 
 	data := map[string]interface{}{
 		"count": 44,
-		"user":  &User{"Goku", 9001},
+		"user":  &Sayan{"Goku", 9001, &Sayan{"Roshi", 0, nil}},
 	}
 	buffer := new(bytes.Buffer)
 	template.Render(buffer, data)
 	spec.Expect(buffer.String()).ToEqual(expected)
 }
 
-type User struct {
+type Sayan struct {
 	Name       string
 	PowerLevel int
+	Sensei     *Sayan
 }
 
-func (u *User) Analysis(cutoff int) string {
-	if u.PowerLevel > cutoff {
+func (s *Sayan) Analysis(cutoff int) string {
+	if s.PowerLevel > cutoff {
 		return fmt.Sprintf("it's over %d!", cutoff)
 	}
 	return fmt.Sprintf("it's under %d", cutoff)
+}
+
+func (s *Sayan) String() string {
+	return s.Name
 }

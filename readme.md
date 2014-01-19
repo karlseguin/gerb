@@ -93,3 +93,16 @@ builtins, this process is not thread safe:
         "Sprintf", fmt.Sprintf
       )
     }
+
+## Multiple Return Values
+If you call a function which returns multiple values, only the first value is
+considered/returned.
+
+This is likely to change, but the scope might be limited. Specifically, a
+`var` tag might be added which would properly handle multiple return
+values:
+
+    `<% var x, y, _ = DoSomethihing() %>`
+
+It's up in the air.
+

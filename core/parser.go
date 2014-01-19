@@ -202,9 +202,11 @@ func (p *Parser) ReadDynamic(negate bool) (Value, error) {
 		if isEnd && (p.data[start] == ' ' || start == p.position) {
 			break
 		}
-		fields = append(fields, field)
-		types = append(types, t)
-		args = append(args, a)
+		if len(field) != 0 || t == IndexedType {
+			fields = append(fields, field)
+			types = append(types, t)
+			args = append(args, a)
+		}
 		if isEnd {
 			break
 		}

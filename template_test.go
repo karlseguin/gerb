@@ -61,12 +61,13 @@ func Test_RendersAnObjectsFields(t *testing.T) {
 }
 
 func Test_RendersAnNestedObjectsFields(t *testing.T) {
-	// assertRender(t, `<%= user.sensei %>`, `Roshi`)
+	assertRender(t, `<%= user.sensei %>`, `Roshi`)
 	assertRender(t, `<%= user.sensei.name %>`, `Roshi`)
 }
 
 func Test_RendersAnObjectsMethod(t *testing.T) {
 	assertRender(t, `<%= user.Analysis(9000) %>`, `it's over 9000!`)
+	assertRender(t, `<%= user.Master().Analysis(1) %>`, `it's under 1`)
 }
 
 func Test_RenderSlices(t *testing.T) {
@@ -121,6 +122,10 @@ func (s *Sayan) Analysis(cutoff int) string {
 		return fmt.Sprintf("it's over %d!", cutoff)
 	}
 	return fmt.Sprintf("it's under %d", cutoff)
+}
+
+func (s *Sayan) Master() *Sayan {
+	return s.Sensei
 }
 
 func (s *Sayan) String() string {

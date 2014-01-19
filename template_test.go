@@ -40,7 +40,7 @@ func Test_BasicIntegerOperations(t *testing.T) {
 }
 
 func Test_BasicFloatOperations(t *testing.T) {
-	assertRender(t, `<%= 9000.1 + 1 %>`, `9001.1`)
+	assertRender(t, `<%= 9000.1 + 1%>`, `9001.1`)
 	assertRender(t, `<%= 9000.1 + 1.1 %>`, `9001.2`)
 	assertRender(t, `<%= 9000.2 - 1 %>`, `8999.2`)
 	assertRender(t, `<%= 9000.2 - 1.05 %>`, `8999.150000000001`)
@@ -57,7 +57,7 @@ func Test_RendersAVariableFromAMap(t *testing.T) {
 }
 
 func Test_RendersAnObjectsFields(t *testing.T) {
-	assertRender(t, `<%= user.Name %>`, `Goku`)
+	assertRender(t, `<%=   user.Name%>`, `Goku`)
 }
 
 func Test_RendersAnNestedObjectsFields(t *testing.T) {
@@ -70,10 +70,10 @@ func Test_RendersAnObjectsMethod(t *testing.T) {
 }
 
 func Test_RenderSlices(t *testing.T) {
-	assertRender(t, `<%= user.Name[0:3] %>`, `Gok`)
+	assertRender(t, `<%= user.Name[0:3]%>`, `Gok`)
 	assertRender(t, `<%= user.Name[1:3] %>`, `ok`)
-	assertRender(t, `<%= user.Name[:2] %>`, `Go`)
-	assertRender(t, `<%= user.Name[3:] %>`, `u`)
+	assertRender(t, ` <%=   user.Name[:2]   %>`, ` Go`)
+	assertRender(t, `<%= user.Name[3:]%>`, `u`)
 }
 
 func Test_RenderSliceOfMethodReturn(t *testing.T) {
@@ -87,7 +87,7 @@ func Test_UsesBuiltIns(t *testing.T) {
 
 func Test_UsesCustomBuiltIns(t *testing.T) {
 	core.RegisterBuiltin("add", func(a, b int) int { return a + b })
-	assertRender(t, `<%= add(user.powerlevel, 10) %>`, `9011`)
+	assertRender(t, `<%= add(user.powerlevel,10) %>`, `9011`)
 }
 
 func Test_UsesPreRegisteredPackages(t *testing.T) {

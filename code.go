@@ -1,12 +1,12 @@
 package gerb
 
 import (
-	"strings"
 	"github.com/karlseguin/gerb/core"
+	"strings"
 )
 
 var CodeFactories = map[string]CodeFactory{
-	//"if": IfFactory,
+//"if": IfFactory,
 }
 
 type CodeFactory func(*core.Parser) (core.Code, error)

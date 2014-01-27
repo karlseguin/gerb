@@ -304,7 +304,7 @@ func (p *Parser) ReadToken() (string, error) {
 		return "", p.Error("Expect a valid code token")
 	}
 	start := p.position
-	for ;p.position < p.end; p.position++ {
+	for ; p.position < p.end; p.position++ {
 		c := p.data[p.position]
 		if (c < 'a' || c > 'z') && (c < 'A' || c > 'Z') && c != '_' {
 			break

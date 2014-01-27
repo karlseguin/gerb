@@ -42,9 +42,9 @@ func AssignmentFactory(p *core.Parser, name string) (core.Code, error) {
 }
 
 type AssignmentCode struct {
-	names []string
-	nameCount int
-	value core.Value
+	names      []string
+	nameCount  int
+	value      core.Value
 	definition bool
 }
 

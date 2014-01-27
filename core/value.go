@@ -43,7 +43,6 @@ type DynamicValue struct {
 	args  [][]Value
 }
 
-
 func (v *DynamicValue) Resolve(context *Context) interface{} {
 	value, _ := v.resolve(context, false)
 	return value

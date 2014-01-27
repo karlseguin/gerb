@@ -11,11 +11,20 @@ func newTemplate(data []byte) (*Template, error) {
 	parser := core.NewParser(data)
 	for {
 		if literal := parser.ReadLiteral(); literal != nil {
-			container.AddCode(literal)
+			container.AddExecutable(literal)
 		}
 		tagType := parser.ReadTagType()
 		if tagType == core.NoTag {
 			return template, nil
+		}
+		if tagType == core.CodeTag {
+			code, err := createCodeTag(parser)
+			if err != nil {
+				return nil, err
+			}
+			if code != nil {
+				container.AddExecutable(code)
+			}
 		}
 
 		isUnsafe := tagType == core.UnsafeTag
@@ -25,7 +34,7 @@ func newTemplate(data []byte) (*Template, error) {
 				return nil, err
 			}
 			if output != nil {
-				container.AddCode(output)
+				container.AddExecutable(output)
 			}
 		}
 	}

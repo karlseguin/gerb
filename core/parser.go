@@ -308,7 +308,7 @@ func (p *Parser) ReadTagType() TagType {
 	case '!':
 		return UnsafeTag
 	default:
-		return NoTag //todo CodeTag
+		return CodeTag
 	}
 }
 

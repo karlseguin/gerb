@@ -20,7 +20,7 @@ func (o *OutputTag) Execute(context *core.Context) core.ExecutionState {
 	return core.NormalState
 }
 
-func createOutputTag(p *core.Parser, isUnsafe bool) (core.Code, error) {
+func createOutputTag(p *core.Parser, isUnsafe bool) (core.Executable, error) {
 	value, err := p.ReadValue()
 	if err != nil {
 		return nil, err

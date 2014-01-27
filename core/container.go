@@ -1,20 +1,20 @@
 package core
 
 type Container interface {
-	AddCode(Code)
+	AddExecutable(Executable)
 }
 
 type NormalContainer struct {
-	code []Code
+	executable []Executable
 }
 
-func (c *NormalContainer) AddCode(code Code) {
-	c.code = append(c.code, code)
+func (c *NormalContainer) AddExecutable(executable Executable) {
+	c.executable = append(c.executable, executable)
 }
 
 func (c *NormalContainer) Execute(context *Context) ExecutionState {
-	for _, code := range c.code {
-		if state := code.Execute(context); state != NormalState {
+	for _, executable := range c.executable {
+		if state := executable.Execute(context); state != NormalState {
 			return state
 		}
 	}

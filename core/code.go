@@ -1,5 +1,9 @@
 package core
 
-type Code interface {
+type Executable interface {
 	Execute(context *Context) ExecutionState
+}
+
+type Code interface {
+	Executable
 }

@@ -100,6 +100,10 @@ func (v *AdditiveValue) Resolve(context *Context) interface{} {
 	return loggedOperationNil(a, b, "+", 0)
 }
 
+func (v *AdditiveValue) ResolveAll(context *Context) []interface{} {
+	return []interface{}{v.Resolve(context)}
+}
+
 func (v *AdditiveValue) Id() string {
 	return ""
 }
@@ -141,6 +145,10 @@ func (v *MultiplicativeValue) Resolve(context *Context) interface{} {
 	return loggedOperationNil(a, b, "*", 0)
 }
 
+func (v *MultiplicativeValue) ResolveAll(context *Context) []interface{} {
+	return []interface{}{v.Resolve(context)}
+}
+
 func (v *MultiplicativeValue) Id() string {
 	return ""
 }
@@ -159,6 +167,10 @@ func (v *ModulatedValue) Resolve(context *Context) interface{} {
 		}
 	}
 	return loggedOperationNil(a, b, "%", 0)
+}
+
+func (v *ModulatedValue) ResolveAll(context *Context) []interface{} {
+	return []interface{}{v.Resolve(context)}
 }
 
 func (v *ModulatedValue) Id() string {
@@ -200,6 +212,10 @@ func (v *PlusEqualValue) Resolve(context *Context) interface{} {
 	}
 	context.Counters[id] = counter
 	return counter
+}
+
+func (v *PlusEqualValue) ResolveAll(context *Context) []interface{} {
+	return []interface{}{v.Resolve(context)}
 }
 
 func (v *PlusEqualValue) Id() string {

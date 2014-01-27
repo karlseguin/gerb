@@ -47,7 +47,7 @@ func (p *Parser) ReadValue() (Value, error) {
 	var value Value
 	var err error
 	if first == 0 {
-		return nil, p.error("Expected value, got nothing")
+		return nil, p.Error("Expected value, got nothing")
 	}
 	if first >= '0' && first <= '9' {
 		value, err = p.ReadNumber(negate)
@@ -129,14 +129,14 @@ func (p *Parser) ReadNumber(negate bool) (Value, error) {
 
 func (p *Parser) ReadChar(negate bool) (Value, error) {
 	if negate {
-		return nil, p.error("Don't know what to do with a negative character")
+		return nil, p.Error("Don't know what to do with a negative character")
 	}
 	c := p.Next()
 	if c == '\\' {
 		c = p.Next()
 	}
 	if p.Next() != '\'' {
-		return nil, p.error("Invalid character")
+		return nil, p.Error("Invalid character")
 	}
 	p.position++
 	return &StaticValue{c}, nil
@@ -144,7 +144,7 @@ func (p *Parser) ReadChar(negate bool) (Value, error) {
 
 func (p *Parser) ReadString(negate bool) (Value, error) {
 	if negate {
-		return nil, p.error("Don't know what to do with a negative string")
+		return nil, p.Error("Don't know what to do with a negative string")
 	}
 	p.position++
 	start := p.position
@@ -253,7 +253,7 @@ func (p *Parser) ReadIndexing() ([]Value, error) {
 		return []Value{first}, nil
 	}
 	if c != ':' {
-		return nil, p.error("Unrecognized array/map index")
+		return nil, p.Error("Unrecognized array/map index")
 	}
 
 	p.position++
@@ -267,7 +267,7 @@ func (p *Parser) ReadIndexing() ([]Value, error) {
 	}
 
 	if c = p.SkipSpaces(); c != ']' {
-		return nil, p.error("Expected closing array/map bracket")
+		return nil, p.Error("Expected closing array/map bracket")
 	}
 	p.position++
 	return []Value{first, second}, nil
@@ -292,11 +292,40 @@ func (p *Parser) ReadArgs() ([]Value, error) {
 			break
 		}
 		if c != ',' {
-			return nil, p.error("Invalid argument list given to function")
+			return nil, p.Error("Invalid argument list given to function")
 		}
 		p.position++
 	}
 	return values, nil
+}
+
+func (p *Parser) ReadToken() (string, error) {
+	if c := p.SkipSpaces(); c == 0 {
+		return "", p.Error("Expect a valid code token")
+	}
+	start := p.position
+	for ;p.position < p.end; p.position++ {
+		c := p.data[p.position]
+		if (c < 'a' || c > 'z') && (c < 'A' || c > 'Z') && c != '_' {
+			break
+		}
+	}
+	return string(p.data[start:p.position]), nil
+}
+
+func (p *Parser) ReadTokenList() ([]string, error) {
+	names := make([]string, 0, 3)
+	for {
+		name, err := p.ReadToken()
+		if err != nil {
+			return nil, err
+		}
+		names = append(names, name)
+		if c := p.SkipSpaces(); c != ',' {
+			break
+		}
+	}
+	return names, nil
 }
 
 func (p *Parser) ReadTagType() TagType {
@@ -314,7 +343,7 @@ func (p *Parser) ReadTagType() TagType {
 
 func (p *Parser) ReadCloseTag() error {
 	if p.SkipSpaces() != '%' || p.Next() != '>' {
-		return p.error("Expected closing tag")
+		return p.Error("Expected closing tag")
 	}
 	p.position++
 	return nil
@@ -364,7 +393,7 @@ func (p *Parser) Dump(prefix string) {
 	fmt.Println(prefix, ": ", string(p.data[p.position:]))
 }
 
-func (p *Parser) error(s string) error {
+func (p *Parser) Error(s string) error {
 	end := p.position
 	for ; end < p.end; end++ {
 		if p.data[end] == '%' && p.data[end+1] == '>' {
@@ -407,7 +436,7 @@ func (p *Parser) unescape(data []byte, escaped int) ([]byte, error) {
 		case '\\':
 			value[at] = '\\'
 		default:
-			return nil, p.error(fmt.Sprintf("Unknown escape sequence \\%s", string(data[index+1])))
+			return nil, p.Error(fmt.Sprintf("Unknown escape sequence \\%s", string(data[index+1])))
 		}
 		at++
 		data = data[index+2:]

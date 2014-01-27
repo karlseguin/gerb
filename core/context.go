@@ -6,6 +6,6 @@ import (
 
 type Context struct {
 	Writer   io.Writer
-	Data     interface{}
+	Data     map[string]interface{}
 	Counters map[string]int
 }

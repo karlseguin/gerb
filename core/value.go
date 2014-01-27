@@ -8,6 +8,7 @@ import (
 
 type Value interface {
 	Resolve(context *Context) interface{}
+	ResolveAll(context *Context) []interface{}
 	Id() string
 }
 
@@ -17,6 +18,10 @@ type StaticValue struct {
 
 func (v *StaticValue) Resolve(context *Context) interface{} {
 	return v.value
+}
+
+func (v *StaticValue) ResolveAll(context *Context) []interface{} {
+	return []interface{}{v.value}
 }
 
 func (v *StaticValue) Id() string {
@@ -38,7 +43,21 @@ type DynamicValue struct {
 	args  [][]Value
 }
 
+
 func (v *DynamicValue) Resolve(context *Context) interface{} {
+	value, _ := v.resolve(context, false)
+	return value
+}
+
+func (v *DynamicValue) ResolveAll(context *Context) []interface{} {
+	value, isArray := v.resolve(context, true)
+	if isArray {
+		return value.([]interface{})
+	}
+	return []interface{}{value}
+}
+
+func (v *DynamicValue) resolve(context *Context, all bool) (interface{}, bool) {
 	var d interface{} = context.Data
 	isRoot := true
 	isAlias := false
@@ -58,29 +77,39 @@ func (v *DynamicValue) Resolve(context *Context) interface{} {
 					}
 				} else if pkg, ok := OtherAliases[v.names[i-1]]; ok {
 					if alias, ok := pkg[name]; ok {
-						return alias
+						return alias, false
 					}
 				}
-				return v.loggedNil(i)
+				return v.loggedNil(i), false
 			}
 		} else if t == IndexedType {
 			if len(name) > 0 {
 				if d = r.ResolveField(d, name); d == nil {
-					return v.loggedNil(i)
+					return v.loggedNil(i), false
 				}
 			}
 			if d = unindex(d, v.args[i], context); d == nil {
-				return v.loggedNil(i)
+				return v.loggedNil(i), false
 			}
 		} else if t == MethodType {
 			if d = run(d, name, v.args[i], isRoot, isAlias, context); d == nil {
-				return v.loggedNilMethod(i)
+				return v.loggedNilMethod(i), false
+			}
+			if returns, ok := d.([]reflect.Value); ok {
+				if all && i == l-1 {
+					values := make([]interface{}, len(returns))
+					for index, r := range returns {
+						values[index] = r.Interface()
+					}
+					return values, true
+				}
+				d = returns[0].Interface()
 			}
 		}
 		isAlias = false
 		isRoot = false
 	}
-	return r.ResolveFinal(d)
+	return r.ResolveFinal(d), false
 }
 
 func (v *DynamicValue) Id() string {
@@ -170,7 +199,7 @@ func run(container interface{}, name string, params []Value, isRoot, isAlias boo
 		v[index+1] = paramValue
 	}
 	if returns := m.Call(v); len(returns) > 0 {
-		return returns[0].Interface()
+		return returns
 	}
 	return nil
 }
@@ -196,7 +225,7 @@ func runFromLookup(lookup map[string]interface{}, name string, params []Value, c
 			v[index] = reflect.ValueOf(param.Resolve(context))
 		}
 		if returns := typed.Call(v); len(returns) > 0 {
-			return returns[0].Interface()
+			return returns
 		}
 	case reflect.Type:
 		if len(params) != 1 {

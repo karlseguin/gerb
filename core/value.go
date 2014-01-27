@@ -58,6 +58,7 @@ func (v *DynamicValue) ResolveAll(context *Context) []interface{} {
 
 func (v *DynamicValue) resolve(context *Context, all bool) (interface{}, bool) {
 	var d interface{} = context.Data
+	ok := true
 	isRoot := true
 	isAlias := false
 
@@ -66,7 +67,7 @@ func (v *DynamicValue) resolve(context *Context, all bool) (interface{}, bool) {
 		t := v.types[i]
 
 		if t == FieldType {
-			if d = r.ResolveField(d, name); d == nil {
+			if d, ok = r.ResolveField(d, name); ok == false {
 				if isRoot {
 					if alias, ok := FunctionAliases[name]; ok {
 						d = alias
@@ -83,7 +84,7 @@ func (v *DynamicValue) resolve(context *Context, all bool) (interface{}, bool) {
 			}
 		} else if t == IndexedType {
 			if len(name) > 0 {
-				if d = r.ResolveField(d, name); d == nil {
+				if d, ok = r.ResolveField(d, name); ok == false {
 					return v.loggedNil(i), false
 				}
 			}

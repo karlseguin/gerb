@@ -183,7 +183,7 @@ func (p *Parser) ReadDynamic(negate bool) (Value, error) {
 	args := make([][]Value, 0, 5)
 	for p.position < p.end {
 		c := p.data[p.position]
-		if (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_' {
+		if (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (p.position != start && c >= '0' && c <= '9') || c == '_' {
 			p.position++
 			continue
 		}
@@ -306,7 +306,7 @@ func (p *Parser) ReadToken() (string, error) {
 	start := p.position
 	for ; p.position < p.end; p.position++ {
 		c := p.data[p.position]
-		if (c < 'a' || c > 'z') && (c < 'A' || c > 'Z') && c != '_' {
+		if (c < 'a' || c > 'z') && (c < 'A' || c > 'Z') && (p.position != start && (c < '0' || c > '9')) && c != '_' {
 			break
 		}
 	}

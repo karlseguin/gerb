@@ -14,41 +14,48 @@ var (
 )
 
 // Resolves the value of field within data
-func ResolveField(data interface{}, field string) interface{} {
+func ResolveField(data interface{}, field string) (value interface{}, exists bool) {
 	switch typed := data.(type) {
 	case map[string]string:
-		return typed[field]
+		value, exists = typed[field]
+		return
 	case map[string]interface{}:
-		return typed[field]
+		value, exists = typed[field]
+		return
 	case map[string]int:
-		return typed[field]
+		value, exists = typed[field]
+		return
 	case map[string]bool:
-		return typed[field]
+		value, exists = typed[field]
+		return
 	case map[string]float64:
-		return typed[field]
+		value, exists = typed[field]
+		return
 	case map[string]byte:
-		return typed[field]
+		value, exists = typed[field]
+		return
 	case map[string][]byte:
-		return typed[field]
+		value, exists = typed[field]
+		return
 	}
 	v := reflect.ValueOf(data)
 	switch v.Kind() {
 	case reflect.Map:
 		value := v.MapIndex(reflect.ValueOf(field))
 		if value.IsValid() {
-			return value.Interface()
+			return value.Interface(), true
 		}
-		return nil
+		return nil, false
 	case reflect.Struct:
 		return resolveStruct(v, field)
 	case reflect.Ptr:
 		v = reflect.Indirect(v)
 		if v.Kind() != reflect.Struct {
-			return nil
+			return nil, false
 		}
 		return resolveStruct(v, field)
 	default:
-		return nil
+		return nil, true
 	}
 }
 
@@ -80,7 +87,7 @@ func resolvePtrOrStruct(value interface{}) interface{} {
 	return ToBytes(value)
 }
 
-func resolveStruct(value reflect.Value, field string) interface{} {
+func resolveStruct(value reflect.Value, field string) (interface{}, bool) {
 	typeLock.RLock()
 	typeData, exists := typeCache[value]
 	typeLock.RUnlock()
@@ -89,9 +96,9 @@ func resolveStruct(value reflect.Value, field string) interface{} {
 		typeData = buildTypeData(value)
 	}
 	if index, exists := typeData[field]; exists {
-		return value.Field(index).Interface()
+		return value.Field(index).Interface(), true
 	}
-	return nil
+	return nil, false
 }
 
 func buildTypeData(value reflect.Value) map[string]int {

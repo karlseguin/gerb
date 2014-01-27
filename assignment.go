@@ -10,6 +10,7 @@ func AssignmentFactory(p *core.Parser, name string) (core.Code, error) {
 	a.names = append(a.names, name)
 	c := p.SkipSpaces()
 	if c == ',' {
+		p.Next()
 		names, err := p.ReadTokenList()
 		if err != nil {
 			return nil, err
@@ -57,8 +58,19 @@ func (c *AssignmentCode) Execute(context *core.Context) core.ExecutionState {
 			valueCount = c.nameCount
 		}
 	}
+	hasNew := false
 	for i := 0; i < valueCount; i++ {
-		context.Data[c.names[i]] = values[i]
+		name := c.names[i]
+		if _, exists := context.Data[name]; !exists {
+			hasNew = true
+		}
+		context.Data[name] = values[i]
+	}
+
+	if hasNew && !c.definition {
+		core.Log.Error(fmt.Sprintf("Assigning to %v, which are undefined, using =", c.names))
+	} else if !hasNew && c.definition {
+		core.Log.Error(fmt.Sprintf("Assigning to %v, which are already defined, using :=", c.names))
 	}
 	return core.NormalState
 }

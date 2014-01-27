@@ -50,6 +50,16 @@ func Test_BasicFloatOperations(t *testing.T) {
 	assertRender(t, `<%= 9000.4 / 2.3 %>`, `3913.217391304348`)
 }
 
+func Test_UnaryOperations(t *testing.T) {
+	assertRender(t, `<%= count++ %> <%= count++ %>`, `45 46`)
+	assertRender(t, `<%= count-- %> <%= count-- %><%= count-- %>`, `43 4241`)
+}
+
+func Test_UnaryXEqualOperation(t *testing.T) {
+	assertRender(t, `<%= count += 5 %> <%= count += jump %>`, `49 51`)
+	assertRender(t, `<%= count -= 5 %> <%= count -= jump %>`, `39 37`)
+}
+
 func Test_RendersAVariableFromAMap(t *testing.T) {
 	assertRender(t, `<%= count %>`, `44`)
 	assertRender(t, `<%= count * count %>`, `1936`)
@@ -103,6 +113,7 @@ func assertRender(t *testing.T, raw, expected string) {
 	spec.Expect(err).ToBeNil()
 
 	data := map[string]interface{}{
+		"jump":  2,
 		"count": 44,
 		"user":  &Sayan{"Goku", 9001, &Sayan{"Roshi", 0, nil}},
 	}

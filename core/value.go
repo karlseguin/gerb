@@ -8,6 +8,7 @@ import (
 
 type Value interface {
 	Resolve(context *Context) interface{}
+	Id() string
 }
 
 type StaticValue struct {
@@ -16,6 +17,10 @@ type StaticValue struct {
 
 func (v *StaticValue) Resolve(context *Context) interface{} {
 	return v.value
+}
+
+func (v *StaticValue) Id() string {
+	return ""
 }
 
 type DynamicFieldType int
@@ -27,6 +32,7 @@ const (
 )
 
 type DynamicValue struct {
+	id    string
 	names []string
 	types []DynamicFieldType
 	args  [][]Value
@@ -75,6 +81,10 @@ func (v *DynamicValue) Resolve(context *Context) interface{} {
 		isRoot = false
 	}
 	return r.ResolveFinal(d)
+}
+
+func (v *DynamicValue) Id() string {
+	return v.id
 }
 
 func (v *DynamicValue) loggedNil(index int) interface{} {

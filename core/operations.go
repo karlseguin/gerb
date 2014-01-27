@@ -1,19 +1,45 @@
 package core
 
 import (
+	"fmt"
 	"github.com/karlseguin/gerb/r"
 	"time"
-	"fmt"
 )
 
-type OperationFactory func(a, b Value) Value
+var OneStaticValue = &StaticValue{1}
 
-var Operations = map[byte]OperationFactory{
-	'+': AddOperation,
-	'-': SubOperation,
-	'*': MultiplyOperation,
-	'/': DivideOperation,
-	'%': ModuloOperation,
+type OperationFactory func(a, b Value) Value
+type UnaryOperationFactory func(a Value) Value
+
+var UnaryOperations = map[string]UnaryOperationFactory{
+	"++": IncrementOperation,
+	"--": DecrementOperation,
+}
+
+var Operations = map[string]OperationFactory{
+	"+=": PlusEqualOperation,
+	"-=": MinusEqualOperation,
+	"+":  AddOperation,
+	"-":  SubOperation,
+	"*":  MultiplyOperation,
+	"/":  DivideOperation,
+	"%":  ModuloOperation,
+}
+
+func IncrementOperation(a Value) Value {
+	return &PlusEqualValue{a, OneStaticValue, "++", false}
+}
+
+func DecrementOperation(a Value) Value {
+	return &PlusEqualValue{a, OneStaticValue, "--", true}
+}
+
+func PlusEqualOperation(a, b Value) Value {
+	return &PlusEqualValue{a, b, "+=", false}
+}
+
+func MinusEqualOperation(a, b Value) Value {
+	return &PlusEqualValue{a, b, "-=", true}
 }
 
 func AddOperation(a, b Value) Value {
@@ -74,6 +100,10 @@ func (v *AdditiveValue) Resolve(context *Context) interface{} {
 	return loggedOperationNil(a, b, "+", 0)
 }
 
+func (v *AdditiveValue) Id() string {
+	return ""
+}
+
 type MultiplicativeValue struct {
 	a      Value
 	b      Value
@@ -111,6 +141,10 @@ func (v *MultiplicativeValue) Resolve(context *Context) interface{} {
 	return loggedOperationNil(a, b, "*", 0)
 }
 
+func (v *MultiplicativeValue) Id() string {
+	return ""
+}
+
 type ModulatedValue struct {
 	a Value
 	b Value
@@ -127,7 +161,47 @@ func (v *ModulatedValue) Resolve(context *Context) interface{} {
 	return loggedOperationNil(a, b, "%", 0)
 }
 
+func (v *ModulatedValue) Id() string {
+	return ""
+}
+
 func loggedOperationNil(a, b interface{}, sign string, r interface{}) interface{} {
 	Log.Error(fmt.Sprintf("%v %s %v failed, invalid types", a, sign, b))
 	return r
+}
+
+type PlusEqualValue struct {
+	a         Value
+	b         Value
+	operation string
+	negate    bool
+}
+
+func (v *PlusEqualValue) Resolve(context *Context) interface{} {
+	id := v.a.Id()
+	if len(id) == 0 {
+		Log.Error(fmt.Sprintf("Invalid operation %s on a non-dynamic value ", v.operation))
+	}
+	counter, ok := context.Counters[id]
+	if ok == false {
+		counter, ok = r.ToInt(v.a.Resolve(context))
+		if ok == false {
+			Log.Error(fmt.Sprintf("Called %s on a non-integer %s", v.operation, id))
+		}
+	}
+	b, ok := r.ToInt(v.b.Resolve(context))
+	if ok == false {
+		Log.Error(fmt.Sprintf("Trying to call %s on %s but the right value was not an integer", v.operation, id))
+	}
+	if v.negate {
+		counter -= b
+	} else {
+		counter += b
+	}
+	context.Counters[id] = counter
+	return counter
+}
+
+func (v *PlusEqualValue) Id() string {
+	return ""
 }

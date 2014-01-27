@@ -62,14 +62,27 @@ func (p *Parser) ReadValue() (Value, error) {
 		return nil, err
 	}
 	c1 := p.SkipSpaces()
-	if c1 == '%' && p.data[p.position+1] == '>' {
+	c2 := p.data[p.position+1]
+	if c1 == '%' && c2 == '>' {
 		return value, nil
 	}
-	factory, ok := Operations[c1]
+	s1 := string(c1)
+	s3 := s1 + string(c2)
+	unaryFactory, ok := UnaryOperations[s3]
+	if ok {
+		p.position += 2
+		return unaryFactory(value), nil
+	}
+
+	factory, ok := Operations[s3]
 	if ok == false {
-		return value, nil
+		if factory, ok = Operations[s1]; ok == false {
+			return value, nil
+		}
+		p.position++
+	} else {
+		p.position += 2
 	}
-	p.position++
 	right, err := p.ReadValue()
 	if err != nil {
 		return nil, err
@@ -212,7 +225,11 @@ func (p *Parser) ReadDynamic(negate bool) (Value, error) {
 		}
 		start = p.position
 	}
-	return &DynamicValue{fields, types, args}, nil
+	id := ""
+	if len(types) == 1 && types[0] == FieldType {
+		id = fields[0]
+	}
+	return &DynamicValue{id, fields, types, args}, nil
 }
 
 func (p *Parser) ReadIndexing() ([]Value, error) {

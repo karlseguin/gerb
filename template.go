@@ -41,8 +41,9 @@ func (t *Template) Render(writer io.Writer, data map[string]interface{}) {
 		data = make(map[string]interface{})
 	}
 	context := &core.Context{
-		Writer: writer,
-		Data:   data,
+		Writer:   writer,
+		Data:     data,
+		Counters: make(map[string]int),
 	}
 	t.Execute(context)
 }

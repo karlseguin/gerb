@@ -20,6 +20,11 @@ func Test_RendersAnFloatOutput(t *testing.T) {
 	assertRender(t, `<%= 123.45 %>`, `123.45`)
 }
 
+func Test_RendersBoolean(t *testing.T) {
+	assertRender(t, `<%= true %>`, `true`)
+	assertRender(t, `<%= false %>`, `false`)
+}
+
 func Test_RendersACharOutput(t *testing.T) {
 	assertRender(t, `<%= '!' %>`, `!`)
 	assertRender(t, `<%= '\'' %>`, `'`)

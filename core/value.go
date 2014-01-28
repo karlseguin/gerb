@@ -6,6 +6,11 @@ import (
 	"reflect"
 )
 
+var (
+	trueValue  = &StaticValue{true}
+	falseValue = &StaticValue{false}
+)
+
 type Value interface {
 	Resolve(context *Context) interface{}
 	ResolveAll(context *Context) []interface{}

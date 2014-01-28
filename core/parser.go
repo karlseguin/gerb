@@ -46,6 +46,7 @@ func (p *Parser) ReadValue() (Value, error) {
 	}
 	var value Value
 	var err error
+	var ok bool
 	if first == 0 {
 		return nil, p.Error("Expected value, got nothing")
 	}
@@ -56,7 +57,9 @@ func (p *Parser) ReadValue() (Value, error) {
 	} else if first == '"' {
 		value, err = p.ReadString(negate)
 	} else {
-		value, err = p.ReadDynamic(negate)
+		if value, ok = p.ReadBoolean(); ok == false {
+			value, err = p.ReadDynamic(negate)
+		}
 	}
 	if err != nil {
 		return nil, err
@@ -174,6 +177,16 @@ func (p *Parser) ReadString(negate bool) (Value, error) {
 	}
 	p.position++ //consume the "
 	return &StaticValue{string(data)}, nil
+}
+
+func (p *Parser) ReadBoolean() (Value, bool) {
+	if p.ConsumeIf([]byte("true")) {
+		return trueValue, true
+	}
+	if p.ConsumeIf([]byte("false")) {
+		return falseValue, true
+	}
+	return nil, false
 }
 
 func (p *Parser) ReadDynamic(negate bool) (Value, error) {
@@ -404,6 +417,23 @@ func (p *Parser) Next() byte {
 
 func (p *Parser) Prev() byte {
 	return p.data[p.position-1]
+}
+
+func (p *Parser) ConsumeIf(bytes []byte) bool {
+	length := len(bytes)
+	position := p.position
+	left := p.len - position
+	if left < length {
+		return false
+	}
+
+	for index, b := range bytes {
+		if p.data[position+index] != b {
+			return false
+		}
+	}
+	p.position += length
+	return true
 }
 
 func (p *Parser) Dump(prefix string) {

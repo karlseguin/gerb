@@ -107,6 +107,17 @@ func Test_UsesPreRegisteredPackages(t *testing.T) {
 	assertRender(t, `<%= strings.IndexByte(strings.ToUpper(user.name), 'O') %>`, "1")
 }
 
+func Test_SingleValueAssigment(t *testing.T) {
+	assertRender(t, `<% abc = "123" %><%= abc %>`, "123")
+	assertRender(t, `<% c = count %><%= count %>`, "44")
+	assertRender(t, `<% l = len(user.Name) %><%= l %>`, "4")
+}
+
+func Test_MultipleValueAssigment(t *testing.T) {
+	assertRender(t, `<% abc,xyz = "123",987 %><%= abc %> <%= xyz %>`, "123 987")
+	assertRender(t, `<% n,err = strconv.Atoi("abc") %><%= n %> - <%= err %>`, `0 - strconv.ParseInt: parsing "abc": invalid syntax`)
+}
+
 func assertRender(t *testing.T, raw, expected string) {
 	spec := gspec.New(t)
 	template, err := ParseString(raw, false)

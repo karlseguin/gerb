@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+	"strconv"
 	"time"
 )
 
@@ -48,6 +49,9 @@ func init() {
 
 	RegisterAlias("fmt",
 		"Sprintf", fmt.Sprintf)
+
+	RegisterAlias("strconv",
+		"Atoi", strconv.Atoi)
 
 	RegisterAliases("time",
 		"Now", time.Now,

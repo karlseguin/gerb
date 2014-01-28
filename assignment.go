@@ -32,39 +32,44 @@ func AssignmentFactory(p *core.Parser, name string) (core.Code, error) {
 	}
 
 	p.Next()
-	value, err := p.ReadValue()
+	values, err := p.ReadValueList()
 	if err != nil {
 		return nil, err
 	}
-
-	a.nameCount = len(a.names)
-	a.value = value
+	a.values = values
 	return a, nil
 }
 
 type AssignmentCode struct {
 	names      []string
-	nameCount  int
-	value      core.Value
+	values     []core.Value
 	definition bool
 }
 
 func (c *AssignmentCode) Execute(context *core.Context) core.ExecutionState {
-	values := c.value.ResolveAll(context)
-	valueCount := len(values)
-	if valueCount != c.nameCount {
-		core.Log.Error(fmt.Sprintf("%d variable(s) on left side of assignment, but %d return valued received ", c.nameCount, valueCount))
-		if c.nameCount < valueCount {
-			valueCount = c.nameCount
+	index := 0
+	hasNew := false
+	remaining := len(c.names)
+	for _, value := range c.values {
+		values := value.ResolveAll(context)
+		valueCount := len(values)
+		if valueCount > remaining {
+			core.Log.Error(fmt.Sprintf("%d more return value than there are variables", valueCount-remaining))
+			valueCount = remaining
+		}
+		for i := 0; i < valueCount; i++ {
+			name := c.names[index]
+			index++
+			remaining--
+			if _, exists := context.Data[name]; !exists {
+				hasNew = true
+			}
+			context.Data[name] = values[i]
 		}
 	}
-	hasNew := false
-	for i := 0; i < valueCount; i++ {
-		name := c.names[i]
-		if _, exists := context.Data[name]; !exists {
-			hasNew = true
-		}
-		context.Data[name] = values[i]
+
+	if remaining > 0 {
+		core.Log.Error(fmt.Sprintf("Expected %d variable(s) but only got %d", len(c.names), len(c.names)-remaining))
 	}
 
 	if hasNew && !c.definition {

@@ -324,8 +324,25 @@ func (p *Parser) ReadTokenList() ([]string, error) {
 		if c := p.SkipSpaces(); c != ',' {
 			break
 		}
+		p.Next()
 	}
 	return names, nil
+}
+
+func (p *Parser) ReadValueList() ([]Value, error) {
+	values := make([]Value, 0, 3)
+	for {
+		value, err := p.ReadValue()
+		if err != nil {
+			return nil, err
+		}
+		values = append(values, value)
+		if c := p.SkipSpaces(); c != ',' {
+			break
+		}
+		p.Next()
+	}
+	return values, nil
 }
 
 func (p *Parser) ReadTagType() TagType {

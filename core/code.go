@@ -6,4 +6,7 @@ type Executable interface {
 
 type Code interface {
 	Executable
+	IsCodeContainer() bool
+	IsContentContainer() bool
+	AddExecutable(Executable)
 }

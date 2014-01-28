@@ -6,23 +6,35 @@ import (
 )
 
 var CodeFactories = map[string]CodeFactory{
-// "if": IfFactory,
+	"if": IfFactory,
 }
+
+var endScope = new(EndScope)
 
 type CodeFactory func(*core.Parser) (core.Code, error)
 
-func createCodeTag(p *core.Parser) (core.Code, error) {
+func createCodeTag(p *core.Parser) (code core.Code, err error) {
 	token, err := p.ReadToken()
 	if err != nil {
 		return nil, err
 	}
-	if len(token) == 0 {
+	length := len(token)
+	if length == 0 {
+		if err := p.ReadCloseTag(); err != nil {
+			return nil, err
+		}
 		return nil, nil
 	}
+
 	if factory, ok := CodeFactories[strings.ToLower(token)]; ok {
-		return factory(p)
+		code, err = factory(p)
+	} else if token == "}" {
+		code = endScope
+	} else {
+		p.Backwards(length)
+		code, err = p.ReadAssignment()
 	}
-	code, err := AssignmentFactory(p, token)
+
 	if err != nil {
 		return nil, err
 	}
@@ -30,4 +42,21 @@ func createCodeTag(p *core.Parser) (core.Code, error) {
 		return nil, err
 	}
 	return code, nil
+}
+
+type EndScope struct{}
+
+func (c *EndScope) Execute(context *core.Context) core.ExecutionState {
+	panic("Execute called on EndScope tag")
+}
+
+func (c *EndScope) IsCodeContainer() bool {
+	panic("IsCodeContainer called on EndScope tag")
+}
+
+func (c *EndScope) IsContentContainer() bool {
+	panic("IsContentContainer called on EndScope tag")
+}
+func (c *EndScope) AddExecutable(e core.Executable) {
+	panic("AddExecutable called on EndScope tag")
 }

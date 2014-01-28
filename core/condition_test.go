@@ -51,30 +51,30 @@ func Test_EqualWithUnbalancedFloats(t *testing.T) {
 }
 
 func Test_ConditionGroupWithOneCondition(t *testing.T) {
-	assertConditionGroup(t, true, trueCondition())
-	assertConditionGroup(t, false, falseCondition())
+	assertConditionGroup(t, true, trueCondition)
+	assertConditionGroup(t, false, falseCondition)
 }
 
 func Test_ConditionGroupWithTwoOrCondition(t *testing.T) {
-	assertConditionGroup(t, true, trueCondition(), OR, trueCondition())
-	assertConditionGroup(t, true, trueCondition(), OR, falseCondition())
-	assertConditionGroup(t, true, falseCondition(), OR, trueCondition())
-	assertConditionGroup(t, false, falseCondition(), OR, falseCondition())
+	assertConditionGroup(t, true, trueCondition, OR, trueCondition)
+	assertConditionGroup(t, true, trueCondition, OR, falseCondition)
+	assertConditionGroup(t, true, falseCondition, OR, trueCondition)
+	assertConditionGroup(t, false, falseCondition, OR, falseCondition)
 }
 
 func Test_ConditionGroupWithTwoAndCondition(t *testing.T) {
-	assertConditionGroup(t, true, trueCondition(), AND, trueCondition())
-	assertConditionGroup(t, false, trueCondition(), AND, falseCondition())
-	assertConditionGroup(t, false, falseCondition(), AND, trueCondition())
-	assertConditionGroup(t, false, falseCondition(), AND, falseCondition())
+	assertConditionGroup(t, true, trueCondition, AND, trueCondition)
+	assertConditionGroup(t, false, trueCondition, AND, falseCondition)
+	assertConditionGroup(t, false, falseCondition, AND, trueCondition)
+	assertConditionGroup(t, false, falseCondition, AND, falseCondition)
 }
 
 func Test_ConditionGroupWithMultipleConditions(t *testing.T) {
-	assertConditionGroup(t, true, trueCondition(), OR, trueCondition(), AND, falseCondition())
-	assertConditionGroup(t, true, trueCondition(), AND, trueCondition(), OR, trueCondition())
-	assertConditionGroup(t, false, falseCondition(), OR, trueCondition(), AND, falseCondition())
-	assertConditionGroup(t, false, falseCondition(), OR, trueCondition(), AND, falseCondition(), OR, falseCondition())
-	assertConditionGroup(t, true, falseCondition(), OR, trueCondition(), AND, falseCondition(), OR, trueCondition())
+	assertConditionGroup(t, true, trueCondition, OR, trueCondition, AND, falseCondition)
+	assertConditionGroup(t, true, trueCondition, AND, trueCondition, OR, trueCondition)
+	assertConditionGroup(t, false, falseCondition, OR, trueCondition, AND, falseCondition)
+	assertConditionGroup(t, false, falseCondition, OR, trueCondition, AND, falseCondition, OR, falseCondition)
+	assertConditionGroup(t, true, falseCondition, OR, trueCondition, AND, falseCondition, OR, trueCondition)
 }
 
 func assertEqualsCondition(t *testing.T, expected bool, extra bool, left, right Value) {
@@ -138,12 +138,4 @@ func dynamicValue(s string) Value {
 		types: []DynamicFieldType{FieldType},
 		args:  [][]Value{[]Value{}},
 	}
-}
-
-func trueCondition() Verifiable {
-	return &TrueCondition{}
-}
-
-func falseCondition() Verifiable {
-	return &TrueCondition{true}
 }

@@ -7,7 +7,8 @@ import (
 
 func newTemplate(data []byte) (*Template, error) {
 	template := &Template{new(core.NormalContainer)}
-	var container core.Container = template
+	stack := []core.Code{template}
+	var container core.Code = template
 	parser := core.NewParser(data)
 	for {
 		if literal := parser.ReadLiteral(); literal != nil {
@@ -16,15 +17,6 @@ func newTemplate(data []byte) (*Template, error) {
 		tagType := parser.ReadTagType()
 		if tagType == core.NoTag {
 			return template, nil
-		}
-		if tagType == core.CodeTag {
-			code, err := createCodeTag(parser)
-			if err != nil {
-				return nil, err
-			}
-			if code != nil {
-				container.AddExecutable(code)
-			}
 		}
 
 		isUnsafe := tagType == core.UnsafeTag
@@ -35,6 +27,26 @@ func newTemplate(data []byte) (*Template, error) {
 			}
 			if output != nil {
 				container.AddExecutable(output)
+			}
+		} else if tagType == core.CodeTag {
+			code, err := createCodeTag(parser)
+			if err != nil {
+				return nil, err
+			}
+			if code != nil {
+				if code == endScope {
+					l := len(stack) - 1
+					stack = stack[0:l]
+					container = stack[l-1]
+				} else {
+					container.AddExecutable(code)
+					if code.IsContentContainer() {
+						container = code
+					}
+					if code.IsCodeContainer() {
+						stack = append(stack, container)
+					}
+				}
 			}
 		}
 	}
@@ -55,4 +67,12 @@ func (t *Template) Render(writer io.Writer, data map[string]interface{}) {
 		Counters: make(map[string]int),
 	}
 	t.Execute(context)
+}
+
+func (t *Template) IsCodeContainer() bool {
+	return true
+}
+
+func (t *Template) IsContentContainer() bool {
+	return true
 }

@@ -1,9 +1,5 @@
 package core
 
-type Container interface {
-	AddExecutable(Executable)
-}
-
 type NormalContainer struct {
 	executable []Executable
 }

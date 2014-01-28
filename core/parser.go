@@ -345,6 +345,33 @@ func (p *Parser) ReadTokenList() ([]string, error) {
 	return names, nil
 }
 
+func (p *Parser) ReadAssignment() (*Assignment, error) {
+	a := &Assignment{definition: false}
+	names, err := p.ReadTokenList()
+	if err != nil {
+		return nil, err
+	}
+	a.names = names
+	c := p.SkipSpaces()
+
+	if c == ':' {
+		a.definition = true
+		c = p.Next()
+	}
+
+	if c != '=' {
+		return nil, p.Error("Invalid assignment, expecting '=' or ':=' ")
+	}
+
+	p.Next()
+	values, err := p.ReadValueList()
+	if err != nil {
+		return nil, err
+	}
+	a.values = values
+	return a, nil
+}
+
 func (p *Parser) ReadValueList() ([]Value, error) {
 	values := make([]Value, 0, 3)
 	for {
@@ -359,6 +386,108 @@ func (p *Parser) ReadValueList() ([]Value, error) {
 		p.Next()
 	}
 	return values, nil
+}
+
+func (p *Parser) ReadConditionGroup() (Verifiable, error) {
+	group := &ConditionGroup{make([]Verifiable, 0, 2), make([]LogicalOperator, 0, 1)}
+	for {
+		left, err := p.ReadValue()
+		if err != nil {
+			return nil, err
+		}
+		if left == nil {
+			return nil, p.Error("Invalid of missing left value in condition")
+		}
+
+		var booleanCondition *BooleanCondition
+		operator := p.ReadComparisonOperator()
+		if operator == UnknownComparisonOperator {
+			if l1, ok := left.(*StaticValue); ok {
+				if l2, ok := l1.value.(bool); ok {
+					if l2 {
+						booleanCondition = trueCondition
+					} else {
+						booleanCondition = falseCondition
+					}
+				}
+			}
+			if booleanCondition == nil {
+				return nil, p.Error("Invalid or missing comparison operator (should be ==, !=, >, <, >= or <=)")
+			}
+		}
+
+		if booleanCondition != nil {
+			group.verifiables = append(group.verifiables, booleanCondition)
+		} else {
+			right, err := p.ReadValue()
+			if err != nil {
+				return nil, err
+			}
+			if right == nil {
+				return nil, p.Error("Invalid of missing right value in condition")
+			}
+			group.verifiables = append(group.verifiables, &Condition{left, operator, right})
+		}
+
+		if p.SkipSpaces() == '%' {
+			break
+		}
+
+		logical := p.ReadLogicalOperator()
+		if logical == UnknownLogicalOperator {
+			break
+		}
+		group.joins = append(group.joins, logical)
+	}
+	return group, nil
+}
+
+func (p *Parser) ReadComparisonOperator() ComparisonOperator {
+	c1 := p.SkipSpaces()
+	c2 := p.data[p.position+1]
+
+	if c2 == '=' {
+		switch c1 {
+		case '=':
+			p.position += 2
+			return Equals
+		case '!':
+			p.position += 2
+			return NotEquals
+		case '>':
+			p.position += 2
+			return GreaterThanOrEqual
+		case '<':
+			p.position += 2
+			return LessThanOrEqual
+		default:
+			return UnknownComparisonOperator
+		}
+	}
+	if c1 == '>' {
+		p.position++
+		return GreaterThan
+	}
+	if c1 == '<' {
+		p.position++
+		return LessThan
+	}
+
+	return UnknownComparisonOperator
+}
+
+func (p *Parser) ReadLogicalOperator() LogicalOperator {
+	c1 := p.SkipSpaces()
+	c2 := p.data[p.position+1]
+	if c1 == '&' && c2 == '&' {
+		p.position += 2
+		return AND
+	}
+	if c1 == '|' && c2 == '|' {
+		p.position += 2
+		return OR
+	}
+	return UnknownLogicalOperator
 }
 
 func (p *Parser) ReadTagType() TagType {
@@ -422,6 +551,10 @@ func (p *Parser) Prev() byte {
 	return p.data[p.position-1]
 }
 
+func (p *Parser) Backwards(length int) {
+	p.position -= length
+}
+
 func (p *Parser) ConsumeIf(bytes []byte) bool {
 	length := len(bytes)
 	position := p.position
@@ -437,6 +570,30 @@ func (p *Parser) ConsumeIf(bytes []byte) bool {
 	}
 	p.position += length
 	return true
+}
+
+func (p *Parser) TagContains(b byte) bool {
+	p.SkipSpaces()
+	position := p.position
+	var terminator byte = 0
+	for ; position < p.end; position++ {
+		c := p.data[position]
+		if terminator == 0 {
+			if c == b {
+				return true
+			}
+			if c == '"' {
+				terminator = '"'
+			} else if c == '\'' {
+				terminator = '\''
+			} else if c == '>' && p.data[position-1] == '%' {
+				break
+			}
+		} else if c == terminator && p.data[position-1] != '\\' {
+			terminator = 0
+		}
+	}
+	return false
 }
 
 func (p *Parser) Dump(prefix string) {

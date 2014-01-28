@@ -5,6 +5,11 @@ import (
 	"time"
 )
 
+var (
+	trueCondition  = &BooleanCondition{true}
+	falseCondition = &BooleanCondition{false}
+)
+
 type LogicalOperator int
 type ComparisonOperator int
 type Type int
@@ -12,6 +17,7 @@ type Type int
 const (
 	OR LogicalOperator = iota
 	AND
+	UnknownLogicalOperator
 
 	Equals ComparisonOperator = iota
 	NotEquals
@@ -19,6 +25,7 @@ const (
 	GreaterThan
 	LessThanOrEqual
 	GreaterThanOrEqual
+	UnknownComparisonOperator
 
 	String Type = iota
 	Nil
@@ -120,30 +127,24 @@ var ConditionLookup = map[ComparisonOperator]ConditionResolver{
 
 type Verifiable interface {
 	IsTrue(context *Context) bool
-	Inverse()
 }
 
 // represents a group of conditions
 type ConditionGroup struct {
 	verifiables []Verifiable
 	joins       []LogicalOperator
-	inverse     bool
-}
-
-func (g *ConditionGroup) Inverse() {
-	g.inverse = true
 }
 
 func (g *ConditionGroup) IsTrue(context *Context) bool {
 	l := len(g.verifiables) - 1
 	if l == 0 {
-		return g.applyInverse(g.verifiables[0].IsTrue(context))
+		return g.verifiables[0].IsTrue(context)
 	}
 
 	for i := 0; i <= l; i++ {
 		if g.verifiables[i].IsTrue(context) {
 			if i == l || g.joins[i] == OR {
-				return g.applyInverse(true)
+				return true
 			}
 		} else if i != l && g.joins[i] == AND {
 			for ; i < l; i++ {
@@ -153,29 +154,15 @@ func (g *ConditionGroup) IsTrue(context *Context) bool {
 			}
 		}
 	}
-	return g.applyInverse(false)
+	return false
 }
 
-func (g *ConditionGroup) applyInverse(b bool) bool {
-	if g.inverse {
-		return !b
-	}
-	return b
+type BooleanCondition struct {
+	value bool
 }
 
-type TrueCondition struct {
-	inverse bool
-}
-
-func (t *TrueCondition) IsTrue(context *Context) bool {
-	if t.inverse {
-		return false
-	}
-	return true
-}
-
-func (t *TrueCondition) Inverse() {
-	t.inverse = true
+func (c *BooleanCondition) IsTrue(context *Context) bool {
+	return c.value
 }
 
 // represents a conditions (such as x == y)

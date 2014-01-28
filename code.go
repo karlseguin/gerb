@@ -6,7 +6,7 @@ import (
 )
 
 var CodeFactories = map[string]CodeFactory{
-//"if": IfFactory,
+// "if": IfFactory,
 }
 
 type CodeFactory func(*core.Parser) (core.Code, error)

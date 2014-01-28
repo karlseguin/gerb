@@ -9,6 +9,7 @@ import (
 var (
 	trueValue  = &StaticValue{true}
 	falseValue = &StaticValue{false}
+	nilValue   = &StaticValue{nil}
 )
 
 type Value interface {

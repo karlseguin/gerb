@@ -57,7 +57,7 @@ func (p *Parser) ReadValue() (Value, error) {
 	} else if first == '"' {
 		value, err = p.ReadString(negate)
 	} else {
-		if value, ok = p.ReadBoolean(); ok == false {
+		if value, ok = p.ReadBuiltin(); ok == false {
 			value, err = p.ReadDynamic(negate)
 		}
 	}
@@ -179,12 +179,15 @@ func (p *Parser) ReadString(negate bool) (Value, error) {
 	return &StaticValue{string(data)}, nil
 }
 
-func (p *Parser) ReadBoolean() (Value, bool) {
+func (p *Parser) ReadBuiltin() (Value, bool) {
 	if p.ConsumeIf([]byte("true")) {
 		return trueValue, true
 	}
 	if p.ConsumeIf([]byte("false")) {
 		return falseValue, true
+	}
+	if p.ConsumeIf([]byte("nil")) {
+		return nilValue, true
 	}
 	return nil, false
 }

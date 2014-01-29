@@ -445,18 +445,7 @@ func (p *Parser) ReadConditionGroup() (Verifiable, error) {
 		var booleanCondition *BooleanCondition
 		operator := p.ReadComparisonOperator()
 		if operator == UnknownComparisonOperator {
-			if l1, ok := left.(*StaticValue); ok {
-				if l2, ok := l1.value.(bool); ok {
-					if l2 {
-						booleanCondition = TrueCondition
-					} else {
-						booleanCondition = FalseCondition
-					}
-				}
-			}
-			if booleanCondition == nil {
-				return nil, p.Error("Invalid or missing comparison operator (should be ==, !=, >, <, >= or <=)")
-			}
+			booleanCondition = &BooleanCondition{left}
 		}
 
 		if booleanCondition != nil {

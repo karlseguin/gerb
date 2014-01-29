@@ -126,6 +126,7 @@ func Test_MultipleValueAssigment(t *testing.T) {
 func Test_IfBool(t *testing.T) {
 	assertRender(t, `<% if true { %>1<% } %>`, "1")
 	assertRender(t, `<%if true { %>2<%}%>`, "2")
+	assertRender(t, `<%if t { %>3<%}%>`, "3")
 }
 
 func Test_IfIntTrue(t *testing.T) {
@@ -154,10 +155,6 @@ func Test_IfStringTrue(t *testing.T) {
 	assertRender(t, `<% if user.name == "Goku" { %>c<% }%>`, "c")
 }
 
-func Test_IfStringFalse(t *testing.T) {
-	assertRender(t, `<% if "abc" != "abc" { %>fail<% }%>a`, "a")
-	assertRender(t, `<% if user.name == "vegeta" { %>fail<% }%>b`, "b")
-}
 
 func Test_IfWithMultipleConditions(t *testing.T) {
 	assertRender(t, `<% if true && false { %>fail<% }%>a`, "a")
@@ -193,6 +190,8 @@ func assertRender(t *testing.T, raw, expected string) {
 	data := map[string]interface{}{
 		"jump":  2,
 		"count": 44,
+		"t": true,
+		"f": false,
 		"user":  &Sayan{"Goku", 9001, &Sayan{"Roshi", 0, nil}},
 	}
 	buffer := new(bytes.Buffer)

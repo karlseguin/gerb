@@ -120,7 +120,7 @@ In fact, you can (but probably shouldn't) mix the two:
 
 This is also true for assignments within an `if` or `else if` tag:
 
-    <% if n, ok := strconv.Atoi(value); ok; { %>
+    <% if n, err := strconv.Atoi(value); err != nil { %>
       The number is <%= n %>
     <% } %>
 

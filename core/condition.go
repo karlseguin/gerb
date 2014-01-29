@@ -6,8 +6,8 @@ import (
 )
 
 var (
-	TrueCondition  = &BooleanCondition{true}
-	FalseCondition = &BooleanCondition{false}
+	TrueCondition  = &BooleanCondition{&StaticValue{true}}
+	FalseCondition = &BooleanCondition{&StaticValue{false}}
 )
 
 type LogicalOperator int
@@ -158,11 +158,15 @@ func (g *ConditionGroup) IsTrue(context *Context) bool {
 }
 
 type BooleanCondition struct {
-	value bool
+	value Value
 }
 
 func (c *BooleanCondition) IsTrue(context *Context) bool {
-	return c.value
+	value := c.value.Resolve(context)
+	if b, ok := value.(bool); ok {
+		return b
+	}
+	return false
 }
 
 // represents a conditions (such as x == y)

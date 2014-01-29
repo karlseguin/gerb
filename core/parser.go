@@ -39,8 +39,13 @@ func (p *Parser) ReadLiteral() *Literal {
 func (p *Parser) ReadValue() (Value, error) {
 	first := p.SkipSpaces()
 	negate := false
+	invert := false
 	if first == '-' {
 		negate = true
+		p.position++
+		first = p.SkipSpaces()
+	} else if first == '!' {
+		invert = true
 		p.position++
 		first = p.SkipSpaces()
 	}
@@ -51,14 +56,14 @@ func (p *Parser) ReadValue() (Value, error) {
 		return nil, p.Error("Expected value, got nothing")
 	}
 	if first >= '0' && first <= '9' {
-		value, err = p.ReadNumber(negate)
+		value, err = p.ReadNumber(negate, invert)
 	} else if first == '\'' {
-		value, err = p.ReadChar(negate)
+		value, err = p.ReadChar(negate, invert)
 	} else if first == '"' {
-		value, err = p.ReadString(negate)
+		value, err = p.ReadString(negate, invert)
 	} else {
-		if value, ok = p.ReadBuiltin(); ok == false {
-			value, err = p.ReadDynamic(negate)
+		if value, ok = p.ReadBuiltin(invert); ok == false {
+			value, err = p.ReadDynamic(negate, invert)
 		}
 	}
 	if err != nil {
@@ -93,7 +98,10 @@ func (p *Parser) ReadValue() (Value, error) {
 	return factory(value, right), nil
 }
 
-func (p *Parser) ReadNumber(negate bool) (Value, error) {
+func (p *Parser) ReadNumber(negate, invert bool) (Value, error) {
+	if invert {
+		return nil, p.Error("Don't know what to do with a ! number")
+	}
 	integer := 0
 	fraction := 0
 	target := &integer
@@ -130,9 +138,12 @@ func (p *Parser) ReadNumber(negate bool) (Value, error) {
 	return &StaticValue{integer}, nil
 }
 
-func (p *Parser) ReadChar(negate bool) (Value, error) {
+func (p *Parser) ReadChar(negate, invert bool) (Value, error) {
 	if negate {
 		return nil, p.Error("Don't know what to do with a negative character")
+	}
+	if invert {
+		return nil, p.Error("Don't know what to do with a ! character")
 	}
 	c := p.Next()
 	if c == '\\' {
@@ -145,9 +156,12 @@ func (p *Parser) ReadChar(negate bool) (Value, error) {
 	return &StaticValue{c}, nil
 }
 
-func (p *Parser) ReadString(negate bool) (Value, error) {
+func (p *Parser) ReadString(negate, invert bool) (Value, error) {
 	if negate {
 		return nil, p.Error("Don't know what to do with a negative string")
+	}
+	if invert {
+		return nil, p.Error("Don't know what to do with a ! string")
 	}
 	p.position++
 	start := p.position
@@ -179,11 +193,17 @@ func (p *Parser) ReadString(negate bool) (Value, error) {
 	return &StaticValue{string(data)}, nil
 }
 
-func (p *Parser) ReadBuiltin() (Value, bool) {
+func (p *Parser) ReadBuiltin(invert bool) (Value, bool) {
 	if p.ConsumeIf([]byte("true")) {
+		if invert {
+			return falseValue, true
+		}
 		return trueValue, true
 	}
 	if p.ConsumeIf([]byte("false")) {
+		if invert {
+			return trueValue, true
+		}
 		return falseValue, true
 	}
 	if p.ConsumeIf([]byte("nil")) {
@@ -192,7 +212,7 @@ func (p *Parser) ReadBuiltin() (Value, bool) {
 	return nil, false
 }
 
-func (p *Parser) ReadDynamic(negate bool) (Value, error) {
+func (p *Parser) ReadDynamic(negate, invert bool) (Value, error) {
 	start := p.position
 	fields := make([]string, 0, 5)
 	types := make([]DynamicFieldType, 0, 5)
@@ -245,7 +265,7 @@ func (p *Parser) ReadDynamic(negate bool) (Value, error) {
 	if len(types) == 1 && types[0] == FieldType {
 		id = fields[0]
 	}
-	return &DynamicValue{id, fields, types, args}, nil
+	return &DynamicValue{id, fields, types, args, negate, invert}, nil
 }
 
 func (p *Parser) ReadIndexing() ([]Value, error) {

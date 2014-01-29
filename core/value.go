@@ -47,19 +47,38 @@ type DynamicValue struct {
 	names []string
 	types []DynamicFieldType
 	args  [][]Value
+	negate bool
+	invert bool
 }
 
 func (v *DynamicValue) Resolve(context *Context) interface{} {
 	value, _ := v.resolve(context, false)
+	if v.negate {
+		return applyNegate(value)
+	}
+	if v.invert {
+		return applyInvert(value)
+	}
 	return value
 }
 
 func (v *DynamicValue) ResolveAll(context *Context) []interface{} {
 	value, isArray := v.resolve(context, true)
+	var values []interface{}
 	if isArray {
-		return value.([]interface{})
+		values = value.([]interface{})
+	} else {
+		values = []interface{}{value}
 	}
-	return []interface{}{value}
+
+	if len(values) > 1 && (v.negate || v.invert) {
+		Log.Error("cannot apply ! or - to a multi-value return")
+	} else if v.negate {
+		values[0] = applyNegate(values[0])
+	} else if v.invert {
+		values[0] = applyInvert(values[0])
+	}
+	return values
 }
 
 func (v *DynamicValue) resolve(context *Context, all bool) (interface{}, bool) {
@@ -246,4 +265,25 @@ func runFromLookup(lookup map[string]interface{}, name string, params []Value, c
 		return v.Convert(typed).Interface()
 	}
 	return nil
+}
+
+func applyNegate(v interface{}) interface{} {
+	value := reflect.ValueOf(v)
+	kind := value.Kind()
+	if isInt(kind) {
+		return -value.Int()
+	}
+	if isFloat(kind) {
+		return -value.Float()
+	}
+	Log.Error(fmt.Sprintf("trying to negate a non-numeric value: %v", v))
+	return v
+}
+
+func applyInvert(v interface{}) interface{} {
+	if b, ok := v.(bool); ok {
+		return !b
+	}
+	Log.Error(fmt.Sprintf("trying to invert a non-boolean value: %v", v))
+	return v
 }

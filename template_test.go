@@ -170,6 +170,16 @@ func Test_IfAssignment(t *testing.T) {
 	assertRender(t, `<% if count+=2; count == 46 { %> yes <% }%> <%= count %>`, " yes  46")
 }
 
+func Test_ElseIf(t *testing.T) {
+	assertRender(t, `<% if count = 45; count == 44 { %> if <% } else if count == 45 { %> elseif <% } %>`, " elseif ")
+	assertRender(t, `<% if false { %> if <% } else if false || true { %> elseif <% } %>`, " elseif ")
+}
+
+func Test_Else(t *testing.T) {
+	assertRender(t, `<% if count = 45; count == 44 { %> if <% } else if count == 43 { %> elseif <% } else {%>else<%}%>`, "else")
+	assertRender(t, `<% if false { %> if <% } else { %> else <% } %>`, " else ")
+}
+
 func assertRender(t *testing.T, raw, expected string) {
 	spec := gspec.New(t)
 	template, err := ParseString(raw, false)

@@ -1,6 +1,7 @@
 package gerb
 
 import (
+	"errors"
 	"github.com/karlseguin/gerb/core"
 	"io"
 )
@@ -88,5 +89,5 @@ func (t *Template) IsSibling() bool {
 }
 
 func (t *Template) AddCode(core.Code) error {
-	panic("AddCode called on Template tag")
+	return errors.New("Failed to parse template, you might have an extra }")
 }

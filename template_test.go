@@ -123,6 +123,47 @@ func Test_MultipleValueAssigment(t *testing.T) {
 	assertRender(t, `<% n,err = strconv.Atoi("abc") %><%= n %> - <%= err %>`, `0 - strconv.ParseInt: parsing "abc": invalid syntax`)
 }
 
+func Test_IfBool(t *testing.T) {
+	assertRender(t, `<% if true { %>1<% } %>`, "1")
+	assertRender(t, `<%if true { %>2<%}%>`, "2")
+}
+
+func Test_IfIntTrue(t *testing.T) {
+	assertRender(t, `<% if 123 == 123 { %>3<% }%>`, "3")
+	assertRender(t, `<% if 0 != 123 { %>4<% }%>`, "4")
+	assertRender(t, `<% if 124 > 123 { %>5<% }%>`, "5")
+	assertRender(t, `<% if 123 >= 123 { %>6<% }%>`, "6")
+	assertRender(t, `<% if 125 >= 123 { %>7<% }%>`, "7")
+	assertRender(t, `<% if 122 < 123 { %>8<% }%>`, "8")
+	assertRender(t, `<% if 123 <= 123 { %>9<% }%>`, "9")
+	assertRender(t, `<% if 122 <= 123 { %>a<% }%>`, "a")
+}
+
+func Test_IfIntFalse(t *testing.T) {
+	assertRender(t, `<% if 124 == 123 { %>fail<% }%>3`, "3")
+	assertRender(t, `<% if 123 != 123 { %>fail<% }%>4`, "4")
+	assertRender(t, `<% if 123 > 123 { %>fail<% }%>5`, "5")
+	assertRender(t, `<% if 122 >= 123 { %>fail<% }%>7`, "7")
+	assertRender(t, `<% if 123 < 123 { %>fail<% }%>8`, "8")
+	assertRender(t, `<% if 124 <= 123 { %>fail<% }%>9`, "9")
+}
+
+func Test_IfStringTrue(t *testing.T) {
+	assertRender(t, `<% if "abc" == "abc" { %>a<% }%>`, "a")
+	assertRender(t, `<% if user.name != "vegeta" { %>b<% }%>`, "b")
+	assertRender(t, `<% if user.name == "Goku" { %>c<% }%>`, "c")
+}
+
+func Test_IfStringFalse(t *testing.T) {
+	assertRender(t, `<% if "abc" != "abc" { %>fail<% }%>a`, "a")
+	assertRender(t, `<% if user.name == "vegeta" { %>fail<% }%>b`, "b")
+}
+
+func Test_IfWithMultipleConditions(t *testing.T) {
+	assertRender(t, `<% if true && false { %>fail<% }%>a`, "a")
+	assertRender(t, `<% if true || false { %>b<% }%>b`, "bb")
+}
+
 func assertRender(t *testing.T, raw, expected string) {
 	spec := gspec.New(t)
 	template, err := ParseString(raw, false)

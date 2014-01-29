@@ -499,6 +499,7 @@ func (p *Parser) ReadTagType() TagType {
 	case '!':
 		return UnsafeTag
 	default:
+		p.position--
 		return CodeTag
 	}
 }

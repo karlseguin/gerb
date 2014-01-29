@@ -167,6 +167,7 @@ func Test_IfWithMultipleConditions(t *testing.T) {
 func Test_IfAssignment(t *testing.T) {
 	assertRender(t, `<% if count = 45; count == 45 { %> yes <% }%> <%= count %>`, " yes  45")
 	assertRender(t, `<% if t := 22; t == 22 { %> yes <% }%> <%= t %>`, " yes  ")
+	assertRender(t, `<% if count+=2; count == 46 { %> yes <% }%> <%= count %>`, " yes  46")
 }
 
 func assertRender(t *testing.T, raw, expected string) {

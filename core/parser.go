@@ -357,6 +357,15 @@ func (p *Parser) ReadAssignment() (*Assignment, error) {
 	if c == ':' {
 		a.definition = true
 		c = p.Next()
+	} else if len(names) == 1 {
+		c1 := p.data[p.position+1]
+		if (c == '+' || c == '-') && (c1 == '=' || c1 == c) {
+			p.position += 2
+			if err := p.operationalAssignment(c, c1, a); err != nil {
+				return nil, err
+			}
+			return a, nil
+		}
 	}
 
 	if c != '=' {
@@ -370,6 +379,40 @@ func (p *Parser) ReadAssignment() (*Assignment, error) {
 	}
 	a.values = values
 	return a, nil
+}
+
+var singleDynamicField = []DynamicFieldType{FieldType}
+
+func (p *Parser) operationalAssignment(c1, c2 byte, a *Assignment) error {
+	left := &DynamicValue{
+		id:    a.names[0],
+		names: a.names,
+		types: singleDynamicField,
+	}
+
+	var right, value Value
+	if c2 == '=' {
+		var err error
+		if right, err = p.ReadValue(); err != nil {
+			return err
+		}
+	}
+
+	if c1 == '+' {
+		if c2 == '+' {
+			value = IncrementOperation(left)
+		} else {
+			value = PlusEqualOperation(left, right)
+		}
+	} else {
+		if c2 == '-' {
+			value = DecrementOperation(left)
+		} else {
+			value = MinusEqualOperation(left, right)
+		}
+	}
+	a.values = []Value{value}
+	return nil
 }
 
 func (p *Parser) ReadValueList() ([]Value, error) {

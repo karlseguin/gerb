@@ -33,7 +33,7 @@ func (c *Assignment) Execute(context *Context) ExecutionState {
 	}
 
 	if remaining > 0 {
-		Log.Error(fmt.Sprintf("Expected %d variable(s) but only got %d", len(c.names), len(c.names)-remaining))
+		Log.Error(fmt.Sprintf("Expected %d variable(s), got %d", len(c.names), len(c.names)-remaining))
 	}
 
 	if hasNew && !c.definition {

@@ -175,6 +175,11 @@ func Test_ElseIf(t *testing.T) {
 	assertRender(t, `<% if false { %> if <% } else if false || true { %> elseif <% } %>`, " elseif ")
 }
 
+func Test_ElseIfAssignment(t *testing.T) {
+	assertRender(t, `<% if count = 45; count == 44 { %> if <% } else if count = 46; count == 46 { %> elseif <% } %> <%= count %>`, " elseif  46")
+	assertRender(t, `<% if count = 45; count == 44 { %> if <% } else if t := 3; true { %> elseif <% } %> <%= t %>`, " elseif  ")
+}
+
 func Test_Else(t *testing.T) {
 	assertRender(t, `<% if count = 45; count == 44 { %> if <% } else if count == 43 { %> elseif <% } else {%>else<%}%>`, "else")
 	assertRender(t, `<% if false { %> if <% } else { %> else <% } %>`, " else ")

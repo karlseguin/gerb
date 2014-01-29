@@ -8,6 +8,7 @@ import (
 func IfFactory(p *core.Parser) (core.Code, error) {
 	code := &IfCode{
 		NormalContainer: new(core.NormalContainer),
+		assignments:     make([]*core.Assignment, 0, 3),
 		verifiables:     make([]core.Verifiable, 0, 3),
 		codes:           make([]core.Code, 0, 3),
 	}
@@ -16,11 +17,13 @@ func IfFactory(p *core.Parser) (core.Code, error) {
 		if err != nil {
 			return nil, err
 		}
-		code.assignment = assignment
+		code.assignments = append(code.assignments, assignment)
 		if p.SkipSpaces() != ';' {
 			return nil, p.Error("If assignment should be followed by a semicolon")
 		}
 		p.Next()
+	} else {
+		code.assignments = append(code.assignments, nil)
 	}
 	verifiable, err := p.ReadConditionGroup()
 	if err != nil {
@@ -37,33 +40,32 @@ func IfFactory(p *core.Parser) (core.Code, error) {
 
 type IfCode struct {
 	*core.NormalContainer
-	assignment  *core.Assignment
+	assignments []*core.Assignment
 	verifiables []core.Verifiable
 	codes       []core.Code
 }
 
 func (c *IfCode) Execute(context *core.Context) core.ExecutionState {
-	if c.assignment != nil {
-		if state := c.assignment.Execute(context); state != core.NormalState {
-			return state
-		}
-	}
+	state := core.NormalState
 	for index, verifiable := range c.verifiables {
+		if a := c.assignments[index]; a != nil {
+			a.Execute(context)
+		}
 		if verifiable.IsTrue(context) {
-			var state core.ExecutionState
 			if index == 0 {
 				state = c.NormalContainer.Execute(context)
 			} else {
 				state = c.codes[index].Execute(context)
 			}
-			if c.assignment != nil {
-				c.assignment.Rollback(context)
-			}
-			return state
+			break
 		}
 	}
-
-	return core.NormalState
+	for _, assignment := range c.assignments {
+		if assignment != nil {
+			assignment.Rollback(context)
+		}
+	}
+	return state
 }
 
 func (c *IfCode) IsCodeContainer() bool {
@@ -83,6 +85,7 @@ func (c *IfCode) AddCode(code core.Code) error {
 	if ok == false {
 		return errors.New("If tag only accepts else if/else as a sub tag")
 	}
+	c.assignments = append(c.assignments, e.assignment)
 	c.verifiables = append(c.verifiables, e.verifiable)
 	c.codes = append(c.codes, e)
 	return nil
@@ -91,6 +94,17 @@ func (c *IfCode) AddCode(code core.Code) error {
 func ElseFactory(p *core.Parser) (core.Code, error) {
 	code := &ElseCode{NormalContainer: new(core.NormalContainer)}
 	if p.SkipSpaces() == 'i' && p.ConsumeIf([]byte("if")) {
+		if p.TagContains(';') {
+			assignment, err := p.ReadAssignment()
+			if err != nil {
+				return nil, err
+			}
+			code.assignment = assignment
+			if p.SkipSpaces() != ';' {
+				return nil, p.Error("else if assignment should be followed by a semicolon")
+			}
+			p.Next()
+		}
 		verifiable, err := p.ReadConditionGroup()
 		if err != nil {
 			return nil, err
@@ -111,6 +125,7 @@ func ElseFactory(p *core.Parser) (core.Code, error) {
 
 type ElseCode struct {
 	*core.NormalContainer
+	assignment *core.Assignment
 	verifiable core.Verifiable
 }
 

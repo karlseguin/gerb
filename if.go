@@ -8,8 +8,8 @@ import (
 func IfFactory(p *core.Parser) (core.Code, error) {
 	code := &IfCode{
 		NormalContainer: new(core.NormalContainer),
-		verifiables: make([]core.Verifiable, 0, 3),
-		codes: make([]core.Code, 0, 3),
+		verifiables:     make([]core.Verifiable, 0, 3),
+		codes:           make([]core.Code, 0, 3),
 	}
 	if p.TagContains(';') {
 		assignment, err := p.ReadAssignment()
@@ -37,13 +37,12 @@ func IfFactory(p *core.Parser) (core.Code, error) {
 
 type IfCode struct {
 	*core.NormalContainer
-	assignment *core.Assignment
+	assignment  *core.Assignment
 	verifiables []core.Verifiable
-	codes []core.Code
+	codes       []core.Code
 }
 
 func (c *IfCode) Execute(context *core.Context) core.ExecutionState {
-	//todo if assignment.definition == true, we should rollback this assignment
 	if c.assignment != nil {
 		if state := c.assignment.Execute(context); state != core.NormalState {
 			return state
@@ -51,10 +50,16 @@ func (c *IfCode) Execute(context *core.Context) core.ExecutionState {
 	}
 	for index, verifiable := range c.verifiables {
 		if verifiable.IsTrue(context) {
+			var state core.ExecutionState
 			if index == 0 {
-				return c.NormalContainer.Execute(context)
+				state = c.NormalContainer.Execute(context)
+			} else {
+				state = c.codes[index].Execute(context)
 			}
-			return c.codes[index].Execute(context)
+			if c.assignment != nil {
+				c.assignment.Rollback(context)
+			}
+			return state
 		}
 	}
 

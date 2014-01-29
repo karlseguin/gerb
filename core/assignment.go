@@ -44,6 +44,15 @@ func (c *Assignment) Execute(context *Context) ExecutionState {
 	return NormalState
 }
 
+func (c *Assignment) Rollback(context *Context) {
+	if c.definition {
+		for _, name := range c.names {
+			delete(context.Data, name)
+		}
+	}
+
+}
+
 func (c *Assignment) IsCodeContainer() bool {
 	return false
 }

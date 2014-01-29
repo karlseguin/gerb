@@ -31,8 +31,8 @@ func createCodeTag(p *core.Parser) (code core.Code, err error) {
 		} else {
 			code = endScope
 		}
-	} else  if factory, ok := CodeFactories[token]; ok {
-			code, err = factory(p)
+	} else if factory, ok := CodeFactories[token]; ok {
+		code, err = factory(p)
 	} else {
 		p.Backwards(length)
 		code, err = p.ReadAssignment()

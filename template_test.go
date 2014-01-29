@@ -164,6 +164,11 @@ func Test_IfWithMultipleConditions(t *testing.T) {
 	assertRender(t, `<% if true || false { %>b<% }%>b`, "bb")
 }
 
+func Test_IfAssignment(t *testing.T) {
+	assertRender(t, `<% if count = 45; count == 45 { %> yes <% }%> <%= count %>`, " yes  45")
+	assertRender(t, `<% if t := 22; t == 22 { %> yes <% }%> <%= t %>`, " yes  ")
+}
+
 func assertRender(t *testing.T, raw, expected string) {
 	spec := gspec.New(t)
 	template, err := ParseString(raw, false)

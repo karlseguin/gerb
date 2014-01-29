@@ -1,5 +1,6 @@
 # Gerb
-Gerb is a work in progress. Critically, only output tags are currently supported.
+Gerb is a work in progress. Support for `for` and template inheritance are
+missing.
 
 ## Usage
 
@@ -23,7 +24,8 @@ to parse the same content (based on the content's hash). The cache will
 automatically evict old items.
 
 Once you have a template, you use the `Render` method to output the template
-to the specified `io.Writer` using the specified data. Data must be a `map[string]interface{}`.
+to the specified `io.Writer` using the specified data. Data must be a
+`map[string]interface{}`.
 
 It's safe to call `Render` from multiple threads.
 
@@ -99,15 +101,43 @@ You can see a list of what's currently aliased by looking at
 
 ## Multiple Return Values
 If you call a function which returns multiple values, only the first value is
-considered/returned.
+considered/returned. The exception to this rule is with any assignment.
 
-This is likely to change, but the scope might be limited. Specifically, a
-`var` tag might be added which would properly handle multiple return
-values:
+## Assignments
+It's possible to create/assign to new or existing variables within a template:
 
-    `<% var x, y, _ = DoSomethihing() %>`
+    <% name := "leto" %>
 
-It's up in the air.
+Assignment supports multiple values, either via an explicit list of values or
+a function which returns multiple values:
+
+    <% name, power := "goku", 9000 %>
+    <% name, power := sayan.Stats() %>
+
+In fact, you can (but probably shouldn't) mix the two:
+
+    <% name, power := sayan.Name(), 9000 %>
+
+This is also true for assignments within an `if` or `else if` tag:
+
+    <% if n, ok := strconv.Atoi(value); ok; { %>
+      The number is <%= n %>
+    <% } %>
+
+## ++, --, += and -=
+There's limited support for these four operators. As a general rule, they should
+only ever be used on simple values (support was basically added to support the
+i++ in a `for` loop).
+
+Here's a couple examples of what **is not supported**:
+
+    <% user.PowerLevel++ %>
+    <% ranks[4]++ %>
+
+Put differently, these 4 operators should only ever be used as such:
+
+    <% counter++ %>
+
 
 ## Errors and Logs
 `Render` should never fail. By default, `Render` will log errors to stdout. This

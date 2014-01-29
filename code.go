@@ -2,7 +2,6 @@ package gerb
 
 import (
 	"github.com/karlseguin/gerb/core"
-	"strings"
 )
 
 var CodeFactories = map[string]CodeFactory{
@@ -26,10 +25,14 @@ func createCodeTag(p *core.Parser) (code core.Code, err error) {
 		return nil, nil
 	}
 
-	if factory, ok := CodeFactories[strings.ToLower(token)]; ok {
-		code, err = factory(p)
-	} else if token == "}" {
-		code = endScope
+	if token == "}" {
+		if p.SkipSpaces() == 'e' && p.ConsumeIf([]byte("else")) {
+			code, err = ElseFactory(p)
+		} else {
+			code = endScope
+		}
+	} else  if factory, ok := CodeFactories[token]; ok {
+			code, err = factory(p)
 	} else {
 		p.Backwards(length)
 		code, err = p.ReadAssignment()
@@ -57,6 +60,15 @@ func (c *EndScope) IsCodeContainer() bool {
 func (c *EndScope) IsContentContainer() bool {
 	panic("IsContentContainer called on EndScope tag")
 }
+
+func (c *EndScope) IsSibling() bool {
+	return false
+}
+
 func (c *EndScope) AddExecutable(e core.Executable) {
 	panic("AddExecutable called on EndScope tag")
+}
+
+func (c *EndScope) AddCode(core.Code) error {
+	panic("AddCode called on EndScope tag")
 }

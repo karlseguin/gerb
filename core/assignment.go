@@ -51,6 +51,15 @@ func (c *Assignment) IsCodeContainer() bool {
 func (c *Assignment) IsContentContainer() bool {
 	return false
 }
+
+func (c *Assignment) IsSibling() bool {
+	return false
+}
+
 func (c *Assignment) AddExecutable(Executable) {
 	panic("AddExecutable called on assignment tag")
+}
+
+func (c *Assignment) AddCode(Code) error {
+	panic("AddCode called on EndScope tag")
 }

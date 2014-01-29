@@ -8,5 +8,7 @@ type Code interface {
 	Executable
 	IsCodeContainer() bool
 	IsContentContainer() bool
+	IsSibling() bool
 	AddExecutable(Executable)
+	AddCode(Code) error
 }

@@ -405,9 +405,9 @@ func (p *Parser) ReadConditionGroup() (Verifiable, error) {
 			if l1, ok := left.(*StaticValue); ok {
 				if l2, ok := l1.value.(bool); ok {
 					if l2 {
-						booleanCondition = trueCondition
+						booleanCondition = TrueCondition
 					} else {
-						booleanCondition = falseCondition
+						booleanCondition = FalseCondition
 					}
 				}
 			}

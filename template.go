@@ -39,7 +39,13 @@ func newTemplate(data []byte) (*Template, error) {
 					stack = stack[0:l]
 					container = stack[l-1]
 				} else {
-					container.AddExecutable(code)
+					if code.IsSibling() {
+						if err := stack[len(stack)-1].AddCode(code); err != nil {
+							return nil, err
+						}
+					} else {
+						container.AddExecutable(code)
+					}
 					if code.IsContentContainer() {
 						container = code
 					}
@@ -75,4 +81,12 @@ func (t *Template) IsCodeContainer() bool {
 
 func (t *Template) IsContentContainer() bool {
 	return true
+}
+
+func (t *Template) IsSibling() bool {
+	return false
+}
+
+func (t *Template) AddCode(core.Code) error {
+	panic("AddCode called on Template tag")
 }

@@ -6,8 +6,8 @@ import (
 )
 
 var (
-	trueCondition  = &BooleanCondition{true}
-	falseCondition = &BooleanCondition{false}
+	TrueCondition  = &BooleanCondition{true}
+	FalseCondition = &BooleanCondition{false}
 )
 
 type LogicalOperator int

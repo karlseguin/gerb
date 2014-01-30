@@ -451,37 +451,51 @@ func (p *Parser) ReadValueList() ([]Value, error) {
 	return values, nil
 }
 
-func (p *Parser) ReadConditionGroup() (Verifiable, error) {
+func (p *Parser) ReadConditionGroup(parentheses bool) (Verifiable, error) {
 	group := &ConditionGroup{make([]Verifiable, 0, 2), make([]LogicalOperator, 0, 1)}
 	for {
-		left, err := p.ReadValue()
-		if err != nil {
-			return nil, err
-		}
-		if left == nil {
-			return nil, p.Error("Invalid of missing left value in condition")
-		}
-
-		var booleanCondition *BooleanCondition
-		operator := p.ReadComparisonOperator()
-		if operator == UnknownComparisonOperator {
-			booleanCondition = &BooleanCondition{left}
-		}
-
-		if booleanCondition != nil {
-			group.verifiables = append(group.verifiables, booleanCondition)
-		} else {
-			right, err := p.ReadValue()
+		if p.SkipSpaces() == '(' {
+			p.position++
+			verifiable, err := p.ReadConditionGroup(true)
 			if err != nil {
 				return nil, err
 			}
-			if right == nil {
-				return nil, p.Error("Invalid of missing right value in condition")
+			group.verifiables = append(group.verifiables, verifiable)
+		} else {
+			left, err := p.ReadValue()
+			if err != nil {
+				return nil, err
 			}
-			group.verifiables = append(group.verifiables, &Condition{left, operator, right})
+			if left == nil {
+				return nil, p.Error("Invalid of missing left value in condition")
+			}
+
+			var booleanCondition *BooleanCondition
+			operator := p.ReadComparisonOperator()
+			if operator == UnknownComparisonOperator {
+				booleanCondition = &BooleanCondition{left}
+			}
+
+			if booleanCondition != nil {
+				group.verifiables = append(group.verifiables, booleanCondition)
+			} else {
+				right, err := p.ReadValue()
+				if err != nil {
+					return nil, err
+				}
+				if right == nil {
+					return nil, p.Error("Invalid of missing right value in condition")
+				}
+				group.verifiables = append(group.verifiables, &Condition{left, operator, right})
+			}
 		}
 
-		if p.SkipSpaces() == '%' {
+		c := p.SkipSpaces()
+		if parentheses && c == ')' {
+			p.position++
+			c = p.SkipSpaces()
+		}
+		if c == '%' {
 			break
 		}
 

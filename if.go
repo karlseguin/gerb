@@ -25,7 +25,7 @@ func IfFactory(p *core.Parser) (core.Code, error) {
 	} else {
 		code.assignments = append(code.assignments, nil)
 	}
-	verifiable, err := p.ReadConditionGroup()
+	verifiable, err := p.ReadConditionGroup(false)
 	if err != nil {
 		return nil, err
 	}
@@ -105,7 +105,7 @@ func ElseFactory(p *core.Parser) (core.Code, error) {
 			}
 			p.Next()
 		}
-		verifiable, err := p.ReadConditionGroup()
+		verifiable, err := p.ReadConditionGroup(false)
 		if err != nil {
 			return nil, err
 		}

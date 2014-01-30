@@ -54,7 +54,8 @@ For example, the following works:
     <%= user.Analysis(count)[start+7:] %>
 
 +, -, /, * and % are the only support operations. Currently (and sadly) order of
-precedence is left to right and parenthesis cannot be used.
+precedence is left to right and parenthesis cannot be used (parenthesis can be
+used in if/elseif statements).
 
 Gerb might occasionally be a little less strict with type conversions, but not
 by much.

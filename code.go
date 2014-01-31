@@ -6,6 +6,7 @@ import (
 
 var CodeFactories = map[string]CodeFactory{
 	"if": IfFactory,
+	"content": ContentFactory,
 }
 
 var endScope = new(EndScope)
@@ -37,7 +38,6 @@ func createCodeTag(p *core.Parser) (code core.Code, err error) {
 		p.Backwards(length)
 		code, err = p.ReadAssignment()
 	}
-
 	if err != nil {
 		return nil, err
 	}

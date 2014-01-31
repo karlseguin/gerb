@@ -184,7 +184,7 @@ func Test_Else(t *testing.T) {
 
 func assertRender(t *testing.T, raw, expected string) {
 	spec := gspec.New(t)
-	template, err := ParseString(raw, false)
+	template, err := ParseString(false, raw)
 	spec.Expect(err).ToBeNil()
 
 	data := map[string]interface{}{

@@ -1,10 +1,9 @@
 # Gerb
-Gerb is a work in progress. Support for `for` and template inheritance are
-missing.
+Gerb is a work in progress. Support for `for` is missing.
 
 ## Usage
 
-    template, err := gerb.ParseString("....", true)
+    template, err := gerb.ParseString(true, "....")
     if err != nil {
       panic(err)
     }
@@ -15,17 +14,17 @@ missing.
 
 There are three available methods for creating a template:
 
-1. Parse(data []byte, useCache bool)
-2. ParseString(data string, useCache bool)
-3. ParseFile(path string, useCache bool)
+1. Parse(cache bool, data [][]byte)
+2. ParseString(cache bool, data []string)
+3. ParseFile(cache bool, paths []string)
 
-Unless `useCache` is set to `false`, an internal cache is used to avoid having
+Unless `cache` is set to `false`, an internal cache is used to avoid having
 to parse the same content (based on the content's hash). The cache will
 automatically evict old items.
 
 Once you have a template, you use the `Render` method to output the template
 to the specified `io.Writer` using the specified data. Data must be a
-`map[string]interface{}`.
+`map[string]interface{}` or nil in the rare case where you have no template data.
 
 It's safe to call `Render` from multiple threads.
 
@@ -57,8 +56,8 @@ For example, the following works:
 precedence is left to right and parenthesis cannot be used (parenthesis can be
 used in if/elseif statements).
 
-Gerb might occasionally be a little less strict with type conversions, but not
-by much.
+Gerb might occasionally be a little less strict than Go with type conversions,
+but not by much.
 
 ## Builtins
 Go's builtins aren't natively available. However, custom builtin functions can
@@ -72,7 +71,7 @@ like the real `len` builtin. You can register your own builtin:
       })
     }
 
-The builtin isn't threadsafe. It's expected that you'll register your builtins
+`RegisterBuiltin` isn't threadsafe. It's expected that you'll register your builtins
 at startup and then leave it alone.
 
 ## Aliases and Package Functions
@@ -80,7 +79,7 @@ In addition to custom builtins, it is possible to alias package functions. This
 makes functions such as `strings.ToUpper` available to use.
 
 By default, many functions from the `strings` package in addition to
-`fmt.Sprintf` are available.
+`fmt.Sprintf` and `strconv.Atoi` are available.
 
 Since Go doesn't make it possible to automatically reflect functions exposed from
 a package, registration must manually be done on a per-method basis. Like
@@ -127,8 +126,8 @@ This is also true for assignments within an `if` or `else if` tag:
 
 ## ++, --, += and -=
 There's limited support for these four operators. As a general rule, they should
-only ever be used on simple values (support was basically added to support the
-i++ in a `for` loop).
+only be used on simple values (support was added to support the i++ in a `for`
+loop).
 
 Here's a couple examples of what **is not supported**:
 
@@ -150,3 +149,20 @@ Alternatively, to use your own logger:
     gerb.Configure().Logger(new(MyLogger))
 
 Your logger must implement `Error(v ...interface{})`.
+
+## Template Inheritance
+The `Parse`, `ParseString` and `ParseFile` methods accept a variable length
+of parameters. The purpose of this is to support template inheritance:
+
+    t := gerb.ParseFile(true, "update.gerb", "member.gerb", "main.gerb")
+
+Templates should be specified from innermost to outermost.
+
+The `<% capture NAME {%>...<% } %>` and builtin `yield` can be used to manage
+content:
+
+    layout := `<title><%= yield("title")%></title> <%= yield %> <footer>...</footer>`
+    about := `<% content "title" { %>about us<% } %> We are ...`
+    t, _ := gerb.ParseString(true, about, layout)
+
+

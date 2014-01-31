@@ -17,3 +17,11 @@ func (c *Configuration) Logger(logger core.Logger) {
 		core.Log = logger
 	}
 }
+
+func (c *Configuration) MaxContentSize(size int) {
+	core.BytePool.SetCapacity(size)
+}
+
+func (c *Configuration) MinContentPoolSize(count int) {
+	core.BytePool.SetCount(count)
+}

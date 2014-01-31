@@ -3,23 +3,83 @@ package gerb
 import (
 	"crypto/sha1"
 	"fmt"
+	"io"
 	"github.com/karlseguin/ccache"
+	"github.com/karlseguin/gerb/core"
+	"github.com/karlseguin/bytepool"
 	"io/ioutil"
 	"time"
 )
 
-var cache = ccache.New(ccache.Configure().Size(1024 * 1024 * 10))
+var Cache = ccache.New(ccache.Configure().Size(1024 * 1024 * 10))
+
+// a chain of templates to render from inner-most to outer-most
+type TemplateChain []core.Executable
+
+func (t TemplateChain) Render(writer io.Writer, data map[string]interface{}) {
+	if data == nil {
+		data = make(map[string]interface{})
+	}
+	defaultContent := core.BytePool.Checkout()
+	context := &core.Context{
+		Writer:   defaultContent,
+		Data:     data,
+		Counters: make(map[string]int),
+		Contents: map[string]*bytepool.Item{"$": defaultContent},
+	}
+	defer cleanup(context)
+	lastIndex := len(t)-1
+	for i := 0; i < lastIndex; i++ {
+		t[i].Execute(context)
+	}
+	context.Writer = writer
+	t[lastIndex].Execute(context)
+}
 
 // Parse the bytes into a gerb template
-func Parse(data []byte, useCache bool) (*Template, error) {
-	if useCache == false {
+func Parse(cache bool, data ...[]byte) (TemplateChain, error) {
+	templates := make(TemplateChain, len(data))
+	for index, d := range data {
+		template, err := parseOne(cache, d)
+		if err != nil {
+			return nil, err
+		}
+		templates[index] = template
+	}
+	return templates, nil
+}
+
+// Parse the string into a erb template
+func ParseString(cache bool, data ...string) (TemplateChain, error) {
+	all := make([][]byte, len(data))
+	for index, d := range data {
+		all[index] = []byte(d)
+	}
+	return Parse(cache, all...)
+}
+
+// Turn the contents of the specified file into a gerb template
+func ParseFile(cache bool, paths ...string) (TemplateChain, error) {
+	all := make([][]byte, len(paths))
+	for index, path := range paths {
+		data, err := ioutil.ReadFile(path)
+		if err != nil {
+			return nil, err
+		}
+		all[index] = data
+	}
+	return Parse(cache, all...)
+}
+
+func parseOne(cache bool, data []byte) (*Template, error) {
+	if cache == false {
 		return newTemplate(data)
 	}
 	hasher := sha1.New()
 	hasher.Write(data)
 	key := fmt.Sprintf("%x", hasher.Sum(nil))
 
-	t := cache.Get(key)
+	t := Cache.Get(key)
 	if t != nil {
 		return t.(*Template), nil
 	}
@@ -28,20 +88,12 @@ func Parse(data []byte, useCache bool) (*Template, error) {
 	if err != nil {
 		return nil, err
 	}
-	cache.Set(key, template, time.Hour)
+	Cache.Set(key, template, time.Hour)
 	return template, nil
 }
 
-// Parse the string into a erb template
-func ParseString(data string, cache bool) (*Template, error) {
-	return Parse([]byte(data), cache)
-}
-
-// Turn the contents of the specified file into a gerb template
-func ParseFile(path string, cache bool) (*Template, error) {
-	data, err := ioutil.ReadFile(path)
-	if err != nil {
-		return nil, err
+func cleanup(context *core.Context) {
+	for _, writer := range context.Contents {
+		writer.Close()
 	}
-	return Parse(data, cache)
 }

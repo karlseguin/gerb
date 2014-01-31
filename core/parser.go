@@ -209,6 +209,15 @@ func (p *Parser) ReadBuiltin(invert bool) (Value, bool) {
 	if p.ConsumeIf([]byte("nil")) {
 		return nilValue, true
 	}
+	at := p.position
+	if p.ConsumeIf([]byte("yield")) {
+		if p.SkipSpaces() == '%' {
+			return new(DefaultYieldValue), true
+		} else {
+			//roll this back, it must be a named yield
+			p.position = at
+		}
+	}
 	return nil, false
 }
 

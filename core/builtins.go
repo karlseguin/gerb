@@ -14,9 +14,17 @@ func RegisterBuiltin(name string, f interface{}) {
 
 func init() {
 	RegisterBuiltin("len", LenBuiltin)
+	RegisterBuiltin("yield", YieldBuiltin)
 }
 
 func LenBuiltin(value interface{}) int {
 	n, _ := r.ToLength(value)
 	return n
+}
+
+func YieldBuiltin(name string, context *Context) interface{} {
+	if writer, ok := context.Contents[name]; ok {
+		return writer.String()
+	}
+	return nil
 }

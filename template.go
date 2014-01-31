@@ -3,7 +3,6 @@ package gerb
 import (
 	"errors"
 	"github.com/karlseguin/gerb/core"
-	"io"
 )
 
 func newTemplate(data []byte) (*Template, error) {
@@ -64,18 +63,6 @@ type Template struct {
 	*core.NormalContainer
 }
 
-func (t *Template) Render(writer io.Writer, data map[string]interface{}) {
-	if data == nil {
-		data = make(map[string]interface{})
-	}
-	context := &core.Context{
-		Writer:   writer,
-		Data:     data,
-		Counters: make(map[string]int),
-	}
-	t.Execute(context)
-}
-
 func (t *Template) IsCodeContainer() bool {
 	return true
 }
@@ -91,3 +78,8 @@ func (t *Template) IsSibling() bool {
 func (t *Template) AddCode(core.Code) error {
 	return errors.New("Failed to parse template, you might have an extra }")
 }
+
+func (t *Template) Close(*core.Context) error {
+	panic("Close called on template tag")
+}
+

@@ -245,9 +245,14 @@ func runFromLookup(lookup map[string]interface{}, name string, params []Value, c
 
 	switch typed := m.(type) {
 	case reflect.Value:
-		v := make([]reflect.Value, len(params))
+		t := typed.Type()
+		c := t.NumIn()
+		v := make([]reflect.Value, c)
 		for index, param := range params {
 			v[index] = reflect.ValueOf(param.Resolve(context))
+		}
+		if c > len(params) {
+			v[len(params)] = reflect.ValueOf(context)
 		}
 		if returns := typed.Call(v); len(returns) > 0 {
 			return returns
@@ -286,4 +291,18 @@ func applyInvert(v interface{}) interface{} {
 	}
 	Log.Error(fmt.Sprintf("trying to invert a non-boolean value: %v", v))
 	return v
+}
+
+type DefaultYieldValue struct {}
+
+func (v *DefaultYieldValue) Resolve(context *Context) interface{} {
+	return YieldBuiltin("$", context)
+}
+
+func (v *DefaultYieldValue) ResolveAll(context *Context) []interface{} {
+	return []interface{}{v.Resolve(context)}
+}
+
+func (v *DefaultYieldValue) Id() string {
+	return ""
 }

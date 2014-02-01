@@ -190,6 +190,22 @@ func Test_InheritanceWithImplicitContent(t *testing.T) {
 	assertRender(t, `<% content user.Name { %>contrived<% } %>body`, `HEAD <%= yield("Goku") %> <%= yield %> FOOTER`, `HEAD contrived body FOOTER`)
 }
 
+func Test_EndlessFor(t *testing.T) {
+	assertRender(t, `<% for { %><% if count--; count == 40 { %><% break %><% } else if count == 42 { %><%continue%><% }%> <%=count%> <%}%>`, ` 43  41 `)
+}
+
+func Test_NormalFor(t *testing.T) {
+	assertRender(t, `<% for i := 0; i < len(user.Name); i++ { %><%= user.Name[i]%> <%}%>`, `G o k u `)
+}
+
+func Test_RangedForOverArray(t *testing.T) {
+	assertRender(t, `<% for index, score := range scores { %> <%= index %>:<%= score %><% } %>`, ` 0:3 1:10 2:25`)
+}
+
+func Test_RangedForOverMap(t *testing.T) {
+	assertRender(t, `<% for color, v := range votes { %> <%= color %>:<%= v %><% } %>`, ` red:100 blue:244`)
+}
+
 func assertRender(t *testing.T, all ...string) {
 	expected := all[len(all)-1]
 	spec := gspec.New(t)
@@ -197,11 +213,13 @@ func assertRender(t *testing.T, all ...string) {
 	spec.Expect(err).ToBeNil()
 
 	data := map[string]interface{}{
-		"jump":  2,
-		"count": 44,
-		"t":     true,
-		"f":     false,
-		"user":  &Sayan{"Goku", 9001, &Sayan{"Roshi", 0, nil}},
+		"jump":   2,
+		"count":  44,
+		"t":      true,
+		"f":      false,
+		"user":   &Sayan{"Goku", 9001, &Sayan{"Roshi", 0, nil}},
+		"scores": []int{3, 10, 25},
+		"votes":  map[string]int{"red": 100, "blue": 244},
 	}
 	buffer := new(bytes.Buffer)
 	template.Render(buffer, data)

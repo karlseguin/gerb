@@ -5,10 +5,10 @@ import (
 )
 
 var CodeFactories = map[string]CodeFactory{
-	"if":      IfFactory,
-	"content": ContentFactory,
-	"for": ForFactory,
-	"break": BreakFactory,
+	"if":       IfFactory,
+	"content":  ContentFactory,
+	"for":      ForFactory,
+	"break":    BreakFactory,
 	"continue": ContinueFactory,
 }
 

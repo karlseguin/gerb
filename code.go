@@ -7,6 +7,7 @@ import (
 var CodeFactories = map[string]CodeFactory{
 	"if":      IfFactory,
 	"content": ContentFactory,
+	"for": ForFactory,
 }
 
 var endScope = new(EndScope)

@@ -8,6 +8,8 @@ var CodeFactories = map[string]CodeFactory{
 	"if":      IfFactory,
 	"content": ContentFactory,
 	"for": ForFactory,
+	"break": BreakFactory,
+	"continue": ContinueFactory,
 }
 
 var endScope = new(EndScope)

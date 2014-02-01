@@ -73,7 +73,10 @@ func (c *ForCode) Execute(context *core.Context) core.ExecutionState {
 		if c.verifiable.IsTrue(context) == false {
 			break
 		}
-		c.NormalContainer.Execute(context)
+		state := c.NormalContainer.Execute(context)
+		if state == core.BreakState {
+			break
+		}
 		if c.step != nil {
 			c.step.Execute(context)
 		}

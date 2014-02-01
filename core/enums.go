@@ -5,6 +5,8 @@ type TagType int
 
 const (
 	NormalState ExecutionState = iota
+	BreakState
+	ContinueState
 
 	OutputTag TagType = iota
 	UnsafeTag

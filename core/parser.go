@@ -304,7 +304,7 @@ func (p *Parser) ReadIndexing() ([]Value, error) {
 	p.position++
 	if p.SkipSpaces() == ']' {
 		p.position++
-		return []Value{first}, nil
+		return []Value{first, nilValue}, nil
 	}
 	second, err := p.ReadValue()
 	if err != nil {

@@ -90,6 +90,7 @@ func Test_RenderSlices(t *testing.T) {
 	assertRender(t, `<%= user.Name[1:3] %>`, `ok`)
 	assertRender(t, ` <%=   user.Name[:2]   %>`, ` Go`)
 	assertRender(t, `<%= user.Name[3:]%>`, `u`)
+	assertRender(t, `<%= user.Name[2]%>`, `k`)
 }
 
 func Test_RenderSliceOfMethodReturn(t *testing.T) {

@@ -178,17 +178,18 @@ func unindex(container interface{}, params []Value, context *Context) interface{
 		} else if first > length-1 {
 			first = length
 		}
-		second := length
 		if valueLength == 2 {
-			second, ok = r.ToInt(params[1].Resolve(context))
+			second, ok := r.ToInt(params[1].Resolve(context))
 			if ok == false {
-				return nil
-			}
-			if second > length {
+				second = length
+			} else if second > length {
 				second = length
 			}
+			return value.Slice(first, second).Interface()
+		} else {
+			return value.Index(first).Interface()
 		}
-		return value.Slice(first, second).Interface()
+
 	} else if kind == reflect.Map {
 		indexValue := reflect.ValueOf(params[0].Resolve(context))
 		return value.MapIndex(indexValue).Interface()

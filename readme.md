@@ -1,5 +1,5 @@
 # Gerb
-Gerb is a work in progress. Support for `for` is missing.
+Gerb is a erb-inspired templating engine for Go.
 
 ## Usage
 
@@ -123,6 +123,16 @@ This is also true for assignments within an `if` or `else if` tag:
     <% if n, err := strconv.Atoi(value); err != nil { %>
       The number is <%= n %>
     <% } %>
+
+## if/elseif/else
+If tag closely mimic Go's if statements. Assignments within an if/elseif
+is allowed and braces are mandatory.
+
+## for
+For tag supports ranged iteration (over slices, arrays, maps and strings)
+as well as the traditional C-style (including an empty for `for { ... }`).
+
+The `continue` and `break` tag work as expected within a for loop.
 
 ## ++, --, += and -=
 There's limited support for these four operators. As a general rule, they should

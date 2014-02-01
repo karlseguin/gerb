@@ -10,6 +10,10 @@ func ForFactory(p *core.Parser) (core.Code, error) {
 	if p.TagContains(';') {
 		return ExplicitForFactory(p)
 	}
+	if p.SkipSpaces() == '{' {
+		p.Next()
+		return &ForCode{NormalContainer: new(core.NormalContainer)}, nil
+	}
 	return RangedForFactory(p)
 }
 
@@ -70,7 +74,7 @@ func (c *ForCode) Execute(context *core.Context) core.ExecutionState {
 		c.init.Execute(context)
 	}
 	for {
-		if c.verifiable.IsTrue(context) == false {
+		if c.verifiable != nil && c.verifiable.IsTrue(context) == false {
 			break
 		}
 		state := c.NormalContainer.Execute(context)

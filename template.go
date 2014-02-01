@@ -29,28 +29,30 @@ func newTemplate(data []byte) (*Template, error) {
 				container.AddExecutable(output)
 			}
 		} else if tagType == core.CodeTag {
-			code, err := createCodeTag(parser)
+			codes, err := createCodeTag(parser)
 			if err != nil {
 				return nil, err
 			}
-			if code != nil {
-				if code == endScope {
-					l := len(stack) - 1
-					stack = stack[0:l]
-					container = stack[l-1]
-				} else {
-					if code.IsSibling() {
-						if err := stack[len(stack)-1].AddCode(code); err != nil {
-							return nil, err
-						}
+			if codes != nil {
+				for _, code := range codes {
+					if code == endScope {
+						l := len(stack) - 1
+						stack = stack[0:l]
+						container = stack[l-1]
 					} else {
-						container.AddExecutable(code)
-					}
-					if code.IsContentContainer() {
-						container = code
-					}
-					if code.IsCodeContainer() {
-						stack = append(stack, container)
+						if code.IsSibling() {
+							if err := stack[len(stack)-1].AddCode(code); err != nil {
+								return nil, err
+							}
+						} else {
+							container.AddExecutable(code)
+						}
+						if code.IsContentContainer() {
+							container = code
+						}
+						if code.IsCodeContainer() {
+							stack = append(stack, container)
+						}
 					}
 				}
 			}

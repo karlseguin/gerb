@@ -662,7 +662,7 @@ func (p *Parser) TagContains(b byte) bool {
 				terminator = '"'
 			} else if c == '\'' {
 				terminator = '\''
-			} else if c == '>' && p.data[position-1] == '%' {
+			} else if (c == '>' && p.data[position-1] == '%') || c == '{' {
 				break
 			}
 		} else if c == terminator && p.data[position-1] != '\\' {

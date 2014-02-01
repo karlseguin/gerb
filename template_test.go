@@ -206,6 +206,15 @@ func Test_RangedForOverMap(t *testing.T) {
 	assertRender(t, `<% for color, v := range votes { %> <%= color %>:<%= v %><% } %>`, ` red:100 blue:244`)
 }
 
+func Test_GroupedTags(t *testing.T) {
+	assertRender(t, `<% for {
+	if count--; count == 40 {
+		break
+	} else if count == 42 {
+		continue
+	} %> <%=count%><% } %> `, ` 43 41 `)
+}
+
 func assertRender(t *testing.T, all ...string) {
 	expected := all[len(all)-1]
 	spec := gspec.New(t)

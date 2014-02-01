@@ -181,9 +181,18 @@ func Test_Else(t *testing.T) {
 	assertRender(t, `<% if false { %> if <% } else { %> else <% } %>`, " else ")
 }
 
-func assertRender(t *testing.T, raw, expected string) {
+func Test_InheritanceWithExplicitContent(t *testing.T) {
+	assertRender(t, `<% content user.Name { %>contrived<% } %>`, `HEAD <%= yield("Goku") %> FOOTER`, `HEAD contrived FOOTER`)
+}
+
+func Test_InheritanceWithImplicitContent(t *testing.T) {
+	assertRender(t, `<% content user.Name { %>contrived<% } %>body`, `HEAD <%= yield("Goku") %> <%= yield %> FOOTER`, `HEAD contrived body FOOTER`)
+}
+
+func assertRender(t *testing.T, all ...string) {
+	expected := all[len(all)-1]
 	spec := gspec.New(t)
-	template, err := ParseString(false, raw)
+	template, err := ParseString(false, all[0:len(all)-1]...)
 	spec.Expect(err).ToBeNil()
 
 	data := map[string]interface{}{

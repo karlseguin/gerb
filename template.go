@@ -82,4 +82,3 @@ func (t *Template) AddCode(core.Code) error {
 func (t *Template) Close(*core.Context) error {
 	panic("Close called on template tag")
 }
-

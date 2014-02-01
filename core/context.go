@@ -1,8 +1,8 @@
 package core
 
 import (
-	"io"
 	"github.com/karlseguin/bytepool"
+	"io"
 )
 
 type Context struct {

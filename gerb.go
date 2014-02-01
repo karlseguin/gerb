@@ -3,10 +3,10 @@ package gerb
 import (
 	"crypto/sha1"
 	"fmt"
-	"io"
+	"github.com/karlseguin/bytepool"
 	"github.com/karlseguin/ccache"
 	"github.com/karlseguin/gerb/core"
-	"github.com/karlseguin/bytepool"
+	"io"
 	"io/ioutil"
 	"time"
 )
@@ -28,7 +28,7 @@ func (t TemplateChain) Render(writer io.Writer, data map[string]interface{}) {
 		Contents: map[string]*bytepool.Item{"$": defaultContent},
 	}
 	defer cleanup(context)
-	lastIndex := len(t)-1
+	lastIndex := len(t) - 1
 	for i := 0; i < lastIndex; i++ {
 		t[i].Execute(context)
 	}

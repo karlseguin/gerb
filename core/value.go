@@ -43,10 +43,10 @@ const (
 )
 
 type DynamicValue struct {
-	id    string
-	names []string
-	types []DynamicFieldType
-	args  [][]Value
+	id     string
+	names  []string
+	types  []DynamicFieldType
+	args   [][]Value
 	negate bool
 	invert bool
 }
@@ -293,7 +293,7 @@ func applyInvert(v interface{}) interface{} {
 	return v
 }
 
-type DefaultYieldValue struct {}
+type DefaultYieldValue struct{}
 
 func (v *DefaultYieldValue) Resolve(context *Context) interface{} {
 	return YieldBuiltin("$", context)

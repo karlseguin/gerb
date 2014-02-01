@@ -5,7 +5,7 @@ import (
 )
 
 var CodeFactories = map[string]CodeFactory{
-	"if": IfFactory,
+	"if":      IfFactory,
 	"content": ContentFactory,
 }
 

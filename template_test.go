@@ -155,7 +155,6 @@ func Test_IfStringTrue(t *testing.T) {
 	assertRender(t, `<% if user.name == "Goku" { %>c<% }%>`, "c")
 }
 
-
 func Test_IfWithMultipleConditions(t *testing.T) {
 	assertRender(t, `<% if true && false { %>fail<% }%>a`, "a")
 	assertRender(t, `<% if true || false { %>b<% }%>b`, "bb")
@@ -190,8 +189,8 @@ func assertRender(t *testing.T, raw, expected string) {
 	data := map[string]interface{}{
 		"jump":  2,
 		"count": 44,
-		"t": true,
-		"f": false,
+		"t":     true,
+		"f":     false,
 		"user":  &Sayan{"Goku", 9001, &Sayan{"Roshi", 0, nil}},
 	}
 	buffer := new(bytes.Buffer)

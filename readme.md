@@ -180,9 +180,3 @@ Gerb can be configured via the fluent interface exposed by `gerb.Configure()`.
 
 - `Logger`: specify the logger to use when an error is encountered rendering
 (defaults to stdout)
-- `MaxContentSize`: A pool of fixed-length buffers are used when rendering. This
-specifies the maximum size of a content area (including the implicit content)
-to support. (defaults to 64K)
-- `MinContentPoolSize`: The number of items to keep in the pool. Note that each
-`content` area takes 1 item. The pool will not block when empty, it'll simply
-create transient buffers. (defaults to 64).

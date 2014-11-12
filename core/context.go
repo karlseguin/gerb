@@ -9,5 +9,5 @@ type Context struct {
 	Writer   io.Writer
 	Data     map[string]interface{}
 	Counters map[string]int
-	Contents map[string]*bytepool.Item
+	Contents map[string]*bytepool.Bytes
 }

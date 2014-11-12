@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-var Cache = ccache.New(ccache.Configure().MaxItems(1024 * 1024 * 10))
+var Cache = ccache.New(ccache.Configure().MaxItems(5000))
 
 // a chain of templates to render from inner-most to outer-most
 type TemplateChain []core.Executable
@@ -25,7 +25,7 @@ func (t TemplateChain) Render(writer io.Writer, data map[string]interface{}) {
 		Writer:   defaultContent,
 		Data:     data,
 		Counters: make(map[string]int),
-		Contents: map[string]*bytepool.Item{"$": defaultContent},
+		Contents: map[string]*bytepool.Bytes{"$": defaultContent},
 	}
 	defer cleanup(context)
 	lastIndex := len(t) - 1
@@ -81,7 +81,7 @@ func parseOne(cache bool, data []byte) (*Template, error) {
 
 	t := Cache.Get(key)
 	if t != nil {
-		return t.(*Template), nil
+		return t.Value().(*Template), nil
 	}
 
 	template, err := newTemplate(data)

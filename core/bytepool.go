@@ -4,4 +4,4 @@ import (
 	"github.com/karlseguin/bytepool"
 )
 
-var BytePool = bytepool.New(64, 65536)
+var BytePool = bytepool.New(65536, 64)

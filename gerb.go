@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-var Cache = ccache.New(ccache.Configure().MaxItems(5000))
+var Cache = ccache.New(ccache.Configure().MaxSize(5000))
 
 // a chain of templates to render from inner-most to outer-most
 type TemplateChain []core.Executable

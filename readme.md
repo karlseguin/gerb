@@ -16,9 +16,9 @@ template.Render(os.Stdout, data)
 
 There are three available methods for creating a template:
 
-1. Parse(cache bool, data [][]byte)
-2. ParseString(cache bool, data []string)
-3. ParseFile(cache bool, paths []string)
+1. `Parse(cache bool, data [][]byte)`
+2. `ParseString(cache bool, data []string)`
+3. `ParseFile(cache bool, paths []string)`
 
 Unless `cache` is set to `false`, an internal cache is used to avoid having
 to parse the same content (based on the content's hash). The cache will

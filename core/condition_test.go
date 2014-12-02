@@ -1,94 +1,101 @@
 package core
 
 import (
+	t "github.com/karlseguin/expect"
 	"testing"
 	"time"
 )
 
-func Test_EqualsConditionWithBalancedStrings(t *testing.T) {
-	assertEqualsCondition(t, true, true, staticValue("abc"), staticValue("abc"))
-	assertEqualsCondition(t, true, true, staticValue(""), staticValue(""))
-	assertEqualsCondition(t, false, true, staticValue("abc"), staticValue("123"))
+type ConditionTest struct{}
+
+func Test_Condition(x *testing.T) {
+	t.Expectify(new(ConditionTest), x)
 }
 
-func Test_EqualsConditionWithBalancedDynamicStrings(t *testing.T) {
-	assertEqualsCondition(t, true, true, dynamicValue("doesnotexist"), dynamicValue("doesnotexist"))
-	assertEqualsCondition(t, true, true, dynamicValue("string"), staticValue("astring"))
-	assertEqualsCondition(t, false, true, dynamicValue("string"), staticValue("other"))
+func (_ ConditionTest) EqualsConditionWithBalancedStrings() {
+	assertEqualsCondition(true, true, staticValue("abc"), staticValue("abc"))
+	assertEqualsCondition(true, true, staticValue(""), staticValue(""))
+	assertEqualsCondition(false, true, staticValue("abc"), staticValue("123"))
 }
 
-func Test_EqualsConditionWithBalancedDynamicArrays(t *testing.T) {
-	assertEqualsCondition(t, true, true, dynamicValue("[]int"), dynamicValue("[]int"))
-	assertEqualsCondition(t, false, true, dynamicValue("[]int"), dynamicValue("[]int2"))
+func (_ ConditionTest) EqualsConditionWithBalancedDynamicStrings() {
+	assertEqualsCondition(true, true, dynamicValue("doesnotexist"), dynamicValue("doesnotexist"))
+	assertEqualsCondition(true, true, dynamicValue("string"), staticValue("astring"))
+	assertEqualsCondition(false, true, dynamicValue("string"), staticValue("other"))
 }
 
-func Test_EqualsConditionWithBalancedBools(t *testing.T) {
-	assertEqualsCondition(t, true, true, staticValue(true), staticValue(true))
-	assertEqualsCondition(t, false, true, staticValue(true), staticValue(false))
+func (_ ConditionTest) EqualsConditionWithBalancedDynamicArrays() {
+	assertEqualsCondition(true, true, dynamicValue("[]int"), dynamicValue("[]int"))
+	assertEqualsCondition(false, true, dynamicValue("[]int"), dynamicValue("[]int2"))
 }
 
-func Test_EqualsConditionWithBalancedInt(t *testing.T) {
-	assertEqualsCondition(t, true, true, staticValue(3231), staticValue(3231))
-	assertEqualsCondition(t, false, true, staticValue(3231), staticValue(2993))
+func (_ ConditionTest) EqualsConditionWithBalancedBools() {
+	assertEqualsCondition(true, true, staticValue(true), staticValue(true))
+	assertEqualsCondition(false, true, staticValue(true), staticValue(false))
 }
 
-func Test_EqualsConditionWithBalancedFloat(t *testing.T) {
-	assertEqualsCondition(t, true, true, staticValue(11.33), staticValue(11.33))
-	assertEqualsCondition(t, false, true, staticValue(11.2), staticValue(11.21))
+func (_ ConditionTest) EqualsConditionWithBalancedInt() {
+	assertEqualsCondition(true, true, staticValue(3231), staticValue(3231))
+	assertEqualsCondition(false, true, staticValue(3231), staticValue(2993))
 }
 
-func Test_EqualWithUnbalancedInt(t *testing.T) {
-	assertEqualsCondition(t, false, true, staticValue(123), staticValue("123"))
-	assertEqualsCondition(t, false, true, staticValue(123), staticValue("1a23"))
-	assertEqualsCondition(t, false, true, staticValue(123), staticValue(123.0))
-	assertEqualsCondition(t, false, true, staticValue(123), staticValue(123.1))
+func (_ ConditionTest) EqualsConditionWithBalancedFloat() {
+	assertEqualsCondition(true, true, staticValue(11.33), staticValue(11.33))
+	assertEqualsCondition(false, true, staticValue(11.2), staticValue(11.21))
 }
 
-func Test_EqualWithUnbalancedFloats(t *testing.T) {
-	assertEqualsCondition(t, false, true, staticValue(123.0), staticValue("123"))
-	assertEqualsCondition(t, false, true, staticValue(123.0), staticValue(123))
-	assertEqualsCondition(t, false, true, staticValue(123.0), staticValue("123.1"))
+func (_ ConditionTest) EqualWithUnbalancedInt() {
+	assertEqualsCondition(false, true, staticValue(123), staticValue("123"))
+	assertEqualsCondition(false, true, staticValue(123), staticValue("1a23"))
+	assertEqualsCondition(false, true, staticValue(123), staticValue(123.0))
+	assertEqualsCondition(false, true, staticValue(123), staticValue(123.1))
 }
 
-func Test_ConditionGroupWithOneCondition(t *testing.T) {
-	assertConditionGroup(t, true, TrueCondition)
-	assertConditionGroup(t, false, FalseCondition)
+func (_ ConditionTest) EqualWithUnbalancedFloats() {
+	assertEqualsCondition(false, true, staticValue(123.0), staticValue("123"))
+	assertEqualsCondition(false, true, staticValue(123.0), staticValue(123))
+	assertEqualsCondition(false, true, staticValue(123.0), staticValue("123.1"))
 }
 
-func Test_ConditionGroupWithTwoOrCondition(t *testing.T) {
-	assertConditionGroup(t, true, TrueCondition, OR, TrueCondition)
-	assertConditionGroup(t, true, TrueCondition, OR, FalseCondition)
-	assertConditionGroup(t, true, FalseCondition, OR, TrueCondition)
-	assertConditionGroup(t, false, FalseCondition, OR, FalseCondition)
+func (_ ConditionTest) ConditionGroupWithOneCondition() {
+	assertConditionGroup(true, TrueCondition)
+	assertConditionGroup(false, FalseCondition)
 }
 
-func Test_ConditionGroupWithTwoAndCondition(t *testing.T) {
-	assertConditionGroup(t, true, TrueCondition, AND, TrueCondition)
-	assertConditionGroup(t, false, TrueCondition, AND, FalseCondition)
-	assertConditionGroup(t, false, FalseCondition, AND, TrueCondition)
-	assertConditionGroup(t, false, FalseCondition, AND, FalseCondition)
+func (_ ConditionTest) ConditionGroupWithTwoOrCondition() {
+	assertConditionGroup(true, TrueCondition, OR, TrueCondition)
+	assertConditionGroup(true, TrueCondition, OR, FalseCondition)
+	assertConditionGroup(true, FalseCondition, OR, TrueCondition)
+	assertConditionGroup(false, FalseCondition, OR, FalseCondition)
 }
 
-func Test_ConditionGroupWithMultipleConditions(t *testing.T) {
-	assertConditionGroup(t, true, TrueCondition, OR, TrueCondition, AND, FalseCondition)
-	assertConditionGroup(t, true, TrueCondition, AND, TrueCondition, OR, TrueCondition)
-	assertConditionGroup(t, false, FalseCondition, OR, TrueCondition, AND, FalseCondition)
-	assertConditionGroup(t, false, FalseCondition, OR, TrueCondition, AND, FalseCondition, OR, FalseCondition)
-	assertConditionGroup(t, true, FalseCondition, OR, TrueCondition, AND, FalseCondition, OR, TrueCondition)
+func (_ ConditionTest) ConditionGroupWithTwoAndCondition() {
+	assertConditionGroup(true, TrueCondition, AND, TrueCondition)
+	assertConditionGroup(false, TrueCondition, AND, FalseCondition)
+	assertConditionGroup(false, FalseCondition, AND, TrueCondition)
+	assertConditionGroup(false, FalseCondition, AND, FalseCondition)
 }
 
-func assertEqualsCondition(t *testing.T, expected bool, extra bool, left, right Value) {
-	assertCondition(t, expected, left, Equals, right)
-	assertCondition(t, !expected, left, NotEquals, right)
+func (_ ConditionTest) ConditionGroupWithMultipleConditions() {
+	assertConditionGroup(true, TrueCondition, OR, TrueCondition, AND, FalseCondition)
+	assertConditionGroup(true, TrueCondition, AND, TrueCondition, OR, TrueCondition)
+	assertConditionGroup(false, FalseCondition, OR, TrueCondition, AND, FalseCondition)
+	assertConditionGroup(false, FalseCondition, OR, TrueCondition, AND, FalseCondition, OR, FalseCondition)
+	assertConditionGroup(true, FalseCondition, OR, TrueCondition, AND, FalseCondition, OR, TrueCondition)
+}
+
+func assertEqualsCondition(expected bool, extra bool, left, right Value) {
+	assertCondition(expected, left, Equals, right)
+	assertCondition(!expected, left, NotEquals, right)
 	if expected && extra {
-		assertCondition(t, false, left, LessThan, right)
-		assertCondition(t, false, left, GreaterThan, right)
-		assertCondition(t, true, left, LessThanOrEqual, right)
-		assertCondition(t, true, left, GreaterThanOrEqual, right)
+		assertCondition(false, left, LessThan, right)
+		assertCondition(false, left, GreaterThan, right)
+		assertCondition(true, left, LessThanOrEqual, right)
+		assertCondition(true, left, GreaterThanOrEqual, right)
 	}
 }
 
-func assertCondition(t *testing.T, expected bool, left Value, op ComparisonOperator, right Value) {
+func assertCondition(expected bool, left Value, op ComparisonOperator, right Value) {
 	data := map[string]interface{}{
 		"[]int":         []int{1, 2, 3},
 		"[]int2":        []int{2, 3, 1},
@@ -102,13 +109,10 @@ func assertCondition(t *testing.T, expected bool, left Value, op ComparisonOpera
 		},
 	}
 	c := &Condition{left, op, right}
-	actual := c.IsTrue(&Context{Data: data})
-	if actual != expected {
-		t.Errorf("Expected %v got %v", expected, actual)
-	}
+	t.Expect(c.IsTrue(&Context{Data: data})).To.Equal(expected)
 }
 
-func assertConditionGroup(t *testing.T, expected bool, data ...interface{}) {
+func assertConditionGroup(expected bool, data ...interface{}) {
 	l := len(data)
 	group := &ConditionGroup{
 		joins:       make([]LogicalOperator, 0, l/2),
@@ -121,10 +125,7 @@ func assertConditionGroup(t *testing.T, expected bool, data ...interface{}) {
 		}
 	}
 
-	actual := group.IsTrue(nil)
-	if actual != expected {
-		t.Errorf("Expected %v got %v", expected, actual)
-	}
+	t.Expect(group.IsTrue(nil)).To.Equal(expected)
 }
 
 func staticValue(v interface{}) Value {

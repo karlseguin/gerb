@@ -120,14 +120,14 @@ func (_ TemplateTest) UsesPreRegisteredPackages() {
 }
 
 func (_ TemplateTest) SingleValueAssigment() {
-	assertRender(`<% abc = "123" %><%= abc %>`, "123")
-	assertRender(`<% c = count %><%= count %>`, "44")
-	assertRender(`<% l = len(user.Name) %><%= l %>`, "4")
+	assertRender(`<% abc := "123" %><%= abc %>`, "123")
+	assertRender(`<% c := count %><%= count %>`, "44")
+	assertRender(`<% l := len(user.Name) %><%= l %>`, "4")
 }
 
 func (_ TemplateTest) MultipleValueAssigment() {
-	assertRender(`<% abc,xyz = "123",987 %><%= abc %> <%= xyz %>`, "123 987")
-	assertRender(`<% n,err = strconv.Atoi("abc") %><%= n %> - <%= err %>`, `0 - strconv.ParseInt: parsing "abc": invalid syntax`)
+	assertRender(`<% abc,xyz := "123",987 %><%= abc %> <%= xyz %>`, "123 987")
+	assertRender(`<% n,err := strconv.Atoi("abc") %><%= n %> - <%= err %>`, `0 - strconv.ParseInt: parsing "abc": invalid syntax`)
 }
 
 func (_ TemplateTest) IfBool() {
@@ -169,7 +169,7 @@ func (_ TemplateTest) IfWithMultipleConditions() {
 
 func (_ TemplateTest) IfAssignment() {
 	assertRender(`<% if count = 45; count == 45 { %> yes <% }%> <%= count %>`, " yes  45")
-	assertRender(`<% if t := 22; t == 22 { %> yes <% }%> <%= t %>`, " yes  ")
+	assertRender(`<% if ttt := 22; ttt == 22 { %> yes <% }%> <%= ttt %>`, " yes  ")
 	assertRender(`<% if count+=2; count == 46 { %> yes <% }%> <%= count %>`, " yes  46")
 }
 
@@ -180,7 +180,7 @@ func (_ TemplateTest) ElseIf() {
 
 func (_ TemplateTest) ElseIfAssignment() {
 	assertRender(`<% if count = 45; count == 44 { %> if <% } else if count = 46; count == 46 { %> elseif <% } %> <%= count %>`, " elseif  46")
-	assertRender(`<% if count = 45; count == 44 { %> if <% } else if t := 3; true { %> elseif <% } %> <%= t %>`, " elseif  ")
+	assertRender(`<% if count = 45; count == 44 { %> if <% } else if ttt := 3; true { %> elseif <% } %> `, " elseif  ")
 }
 
 func (_ TemplateTest) Else() {
@@ -206,6 +206,10 @@ func (_ TemplateTest) NormalFor() {
 
 func (_ TemplateTest) RangedForOverArray() {
 	assertRender(`<% for index, score := range scores { %> <%= index %>:<%= score %><% } %>`, ` 0:3 1:10 2:25`)
+}
+
+func (_ TemplateTest) DurationHandling() {
+	assertRender(`<%= time.Unix(1410569706, 0).Sub(time.Unix(1410569700, 0)).Seconds() %>`, `6`)
 }
 
 func (_ TemplateTest) RangedForOverMap() {

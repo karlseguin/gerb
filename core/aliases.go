@@ -55,6 +55,7 @@ func init() {
 
 	RegisterAliases("time",
 		"Now", time.Now,
+		"Unix", time.Unix,
 		"Nanosecond", time.Nanosecond,
 		"Microsecond", time.Microsecond,
 		"Millisecond", time.Millisecond,

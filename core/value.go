@@ -18,12 +18,24 @@ type Value interface {
 	Id() string
 }
 
+type Coercable interface {
+	ResolveCoerce(context *Context, to reflect.Type) reflect.Value
+}
+
 type StaticValue struct {
 	value interface{}
 }
 
 func (v *StaticValue) Resolve(context *Context) interface{} {
 	return v.value
+}
+
+func (v *StaticValue) ResolveCoerce(context *Context, to reflect.Type) reflect.Value {
+	value := reflect.ValueOf(v.value)
+	if reflect.TypeOf(v.value).ConvertibleTo(to) {
+		return value.Convert(to)
+	}
+	return value
 }
 
 func (v *StaticValue) ResolveAll(context *Context) []interface{} {
@@ -62,6 +74,10 @@ func (v *DynamicValue) Resolve(context *Context) interface{} {
 	return value
 }
 
+func (v *DynamicValue) ResolveCorece(context *Context, to reflect.Type) interface{} {
+	return v.Resolve(context)
+}
+
 func (v *DynamicValue) ResolveAll(context *Context) []interface{} {
 	value, isArray := v.resolve(context, true)
 	var values []interface{}
@@ -90,7 +106,6 @@ func (v *DynamicValue) resolve(context *Context, all bool) (interface{}, bool) {
 	for i, l := 0, len(v.names); i < l; i++ {
 		name := v.names[i]
 		t := v.types[i]
-
 		if t == FieldType {
 			if d, ok = r.ResolveField(d, name); ok == false {
 				if isRoot {
@@ -250,7 +265,13 @@ func runFromLookup(lookup map[string]interface{}, name string, params []Value, c
 		c := t.NumIn()
 		v := make([]reflect.Value, c)
 		for index, param := range params {
-			v[index] = reflect.ValueOf(param.Resolve(context))
+			var value reflect.Value
+			if cp, ok := param.(Coercable); ok {
+				value = cp.ResolveCoerce(context, t.In(index))
+			} else {
+				value = reflect.ValueOf(param.Resolve(context))
+			}
+			v[index] = value
 		}
 		if c > len(params) {
 			v[len(params)] = reflect.ValueOf(context)

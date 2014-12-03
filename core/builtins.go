@@ -14,12 +14,23 @@ func RegisterBuiltin(name string, f interface{}) {
 
 func init() {
 	RegisterBuiltin("len", LenBuiltin)
+	RegisterBuiltin("int", IntBuiltin)
 	RegisterBuiltin("yield", YieldBuiltin)
 }
 
 func LenBuiltin(value interface{}) int {
 	n, _ := r.ToLength(value)
 	return n
+}
+
+func IntBuiltin(value interface{}) interface{} {
+	switch t := value.(type) {
+	case float32:
+		return int(t)
+	case float64:
+		return int(t)
+	}
+	return value
 }
 
 func YieldBuiltin(name string, context *Context) interface{} {

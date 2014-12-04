@@ -10,10 +10,12 @@ func newTemplate(data []byte) (*Template, error) {
 	stack := []core.Code{template}
 	var container core.Code = template
 	parser := core.NewParser(data)
+	trim := false
 	for {
-		if literal := parser.ReadLiteral(); literal != nil {
+		if literal := parser.ReadLiteral(trim); literal != nil {
 			container.AddExecutable(literal)
 		}
+		trim = false
 		tagType := parser.ReadTagType()
 		if tagType == core.NoTag {
 			return template, nil
@@ -34,7 +36,8 @@ func newTemplate(data []byte) (*Template, error) {
 				return nil, err
 			}
 			if codes != nil {
-				for _, code := range codes {
+				trim = codes.Trim
+				for _, code := range codes.List {
 					if code == endScope {
 						l := len(stack) - 1
 						stack = stack[0:l]

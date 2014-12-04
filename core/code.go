@@ -12,3 +12,8 @@ type Code interface {
 	AddExecutable(Executable)
 	AddCode(Code) error
 }
+
+type Codes struct {
+	Trim bool
+	List []Code
+}

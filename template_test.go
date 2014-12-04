@@ -212,6 +212,15 @@ func (_ TemplateTest) DurationHandling() {
 	assertRender(`<%= time.Unix(1410569706, 0).Sub(time.Unix(1410569700, 0)).Seconds() %>`, `6`)
 }
 
+func (_ TemplateTest) StripNewlines() {
+	input := `
+<%% if true { %%>
+	abc
+<%% } %%>
+`
+	assertRender(input, `	abc`)
+}
+
 func (_ TemplateTest) RangedForOverMap() {
 	template, err := ParseString(false, `<% for color, v := range votes { %> <%= color %>:<%= v %><% } %>`)
 	Expect(err).To.Equal(nil)

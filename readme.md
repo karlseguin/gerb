@@ -170,6 +170,9 @@ Put differently, these 4 operators should only ever be used as such:
 <% counter++ %>
 ```
 
+## Newlines
+Use `<%%` to trim newlines from literals before a code block. Use `%%>` to trim newlines from a literal following a codeblock.
+
 ## Errors and Logs
 `Render` should never fail. By default, `Render` will log errors to stdout. This
 behavior can be changed. To disable all logging:

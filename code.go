@@ -12,11 +12,16 @@ var CodeFactories = map[string]CodeFactory{
 	"continue": ContinueFactory,
 }
 
-var endScope = new(EndScope)
+var (
+	endScope       = new(EndScope)
+	elseBytes      = []byte("else")
+	closeBytes     = []byte("%>")
+	trimCloseBytes = []byte("%%>")
+)
 
 type CodeFactory func(*core.Parser) (core.Code, error)
 
-func createCodeTag(p *core.Parser) ([]core.Code, error) {
+func createCodeTag(p *core.Parser) (*core.Codes, error) {
 	codes := make([]core.Code, 0, 1)
 	for {
 		token, err := p.ReadToken()
@@ -33,7 +38,7 @@ func createCodeTag(p *core.Parser) ([]core.Code, error) {
 
 		var code core.Code
 		if token == "}" {
-			if p.SkipSpaces() == 'e' && p.ConsumeIf([]byte("else")) {
+			if p.SkipSpaces() == 'e' && p.ConsumeIf(elseBytes) {
 				code, err = ElseFactory(p)
 			} else {
 				code = endScope
@@ -48,8 +53,13 @@ func createCodeTag(p *core.Parser) ([]core.Code, error) {
 			return nil, err
 		}
 		codes = append(codes, code)
-		if p.SkipSpaces() == '%' && p.ConsumeIf([]byte("%>")) {
-			return codes, nil
+		if p.SkipSpaces() == '%' {
+			if p.ConsumeIf(trimCloseBytes) {
+				return &core.Codes{true, codes}, nil
+			}
+			if p.ConsumeIf(closeBytes) {
+				return &core.Codes{false, codes}, nil
+			}
 		}
 	}
 }

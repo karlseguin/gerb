@@ -23,15 +23,41 @@ func NewParser(data []byte) *Parser {
 	return p
 }
 
-func (p *Parser) ReadLiteral() *Literal {
+var (
+	trueBytes  = []byte("true")
+	falseBytes = []byte("false")
+	nilBytes   = []byte("nil")
+	yieldBytes = []byte("yield")
+)
+
+func (p *Parser) ReadLiteral(trim bool) *Literal {
 	start := p.position
 	for {
+		if trim {
+			if c := p.data[p.position]; c == '\n' || c == '\n' {
+				start++
+				p.position++
+			}
+			trim = false
+		}
 		if p.SkipUntil('%') == false {
 			return &Literal{clone(p.data[start:p.len])}
 		}
 		if p.Prev() == '<' {
 			p.position++ //move past the %
-			return &Literal{clone(p.data[start : p.position-2])}
+			to := p.position - 2
+			if p.data[p.position] == '%' { //trim head
+				p.position++ //move past the 2nd %
+				to--
+				for c := p.data[to]; c == '\n' || c == '\r'; c = p.data[to] {
+					to--
+					if to < start {
+						break
+					}
+				}
+				to++
+			}
+			return &Literal{clone(p.data[start:to])}
 		}
 	}
 }
@@ -194,23 +220,23 @@ func (p *Parser) ReadString(negate, invert bool) (Value, error) {
 }
 
 func (p *Parser) ReadBuiltin(invert bool) (Value, bool) {
-	if p.ConsumeIf([]byte("true")) {
+	if p.ConsumeIf(trueBytes) {
 		if invert {
 			return falseValue, true
 		}
 		return trueValue, true
 	}
-	if p.ConsumeIf([]byte("false")) {
+	if p.ConsumeIf(falseBytes) {
 		if invert {
 			return trueValue, true
 		}
 		return falseValue, true
 	}
-	if p.ConsumeIf([]byte("nil")) {
+	if p.ConsumeIf(nilBytes) {
 		return nilValue, true
 	}
 	at := p.position
-	if p.ConsumeIf([]byte("yield")) {
+	if p.ConsumeIf(yieldBytes) {
 		if p.SkipSpaces() == '%' {
 			return new(DefaultYieldValue), true
 		} else {

@@ -1,7 +1,7 @@
 package core
 
 import (
-	"github.com/karlseguin/bytepool"
+	"gopkg.in/karlseguin/bytepool.v3"
 )
 
 var BytePool = bytepool.New(65536, 64)

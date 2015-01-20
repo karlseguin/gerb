@@ -3,8 +3,8 @@ package gerb
 import (
 	"crypto/sha1"
 	"fmt"
-	"github.com/karlseguin/bytepool"
-	"github.com/karlseguin/ccache"
+	"gopkg.in/karlseguin/bytepool.v3"
+	"gopkg.in/karlseguin/ccache.v1"
 	"github.com/karlseguin/gerb/core"
 	"io"
 	"io/ioutil"

@@ -221,6 +221,14 @@ func (_ TemplateTest) StripNewlines() {
 	assertRender(input, `	abc`)
 }
 
+func (_ TemplateTest) StripLeadNewlines() {
+	input := `<%% if true { %%>
+	abc
+<%% } %%>
+`
+	assertRender(input, `	abc`)
+}
+
 func (_ TemplateTest) RangedForOverMap() {
 	template, err := ParseString(false, `<% for color, v := range votes { %> <%= color %>:<%= v %><% } %>`)
 	Expect(err).To.Equal(nil)
@@ -241,6 +249,24 @@ func (_ TemplateTest) GroupedTags() {
 	} else if count == 42 {
 		continue
 	} %> <%=count%><% } %> `, ` 43 41 `)
+}
+
+func (_ TemplateTest) Comments() {
+	assertRender(`<%# comment 1 %>
+not comment 1
+<%# comment 2 %>
+not comment 2`, "\nnot comment 1\n\nnot comment 2")
+}
+
+func (_ TemplateTest) StrippedComments() {
+	assertRender(`<%%# comment 1 %%>
+not comment 1
+<%%# comment 2 %>
+not comment 2`, "not comment 1\nnot comment 2")
+}
+
+func (_ TemplateTest) PercentInComment() {
+	assertRender(`<%# 4 % 5 %>cm`, "cm")
 }
 
 func assertRender(all ...string) {

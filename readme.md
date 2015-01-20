@@ -173,6 +173,15 @@ Put differently, these 4 operators should only ever be used as such:
 ## Newlines
 Use `<%%` to trim newlines from literals before a code block. Use `%%>` to trim newlines from a literal following a codeblock.
 
+## Comments
+`<%` can be used for comments within templates:
+
+```go
+<%# my comment %>
+```
+
+Newlines can be trimmed around comments using `<%%#` and `%%>`
+
 ## Errors and Logs
 `Render` should never fail. By default, `Render` will log errors to stdout. This
 behavior can be changed. To disable all logging:

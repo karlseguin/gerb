@@ -11,5 +11,6 @@ const (
 	OutputTag TagType = iota
 	UnsafeTag
 	CodeTag
+	CommentTag
 	NoTag
 )

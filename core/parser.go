@@ -24,10 +24,12 @@ func NewParser(data []byte) *Parser {
 }
 
 var (
-	trueBytes  = []byte("true")
-	falseBytes = []byte("false")
-	nilBytes   = []byte("nil")
-	yieldBytes = []byte("yield")
+	trueBytes    = []byte("true")
+	falseBytes   = []byte("false")
+	nilBytes     = []byte("nil")
+	yieldBytes   = []byte("yield")
+	closeTag     = []byte("%>")
+	closeTrimTag = []byte("%%>")
 )
 
 func (p *Parser) ReadLiteral(trim bool) *Literal {
@@ -49,13 +51,18 @@ func (p *Parser) ReadLiteral(trim bool) *Literal {
 			if p.data[p.position] == '%' { //trim head
 				p.position++ //move past the 2nd %
 				to--
-				for c := p.data[to]; c == '\n' || c == '\r'; c = p.data[to] {
-					to--
-					if to < start {
-						break
+				if to >= 0 {
+					for c := p.data[to]; c == '\n' || c == '\r'; c = p.data[to] {
+						to--
+						if to < start {
+							break
+						}
 					}
+					to++
 				}
-				to++
+			}
+			if to < 0 {
+				to = 0
 			}
 			return &Literal{clone(p.data[start:to])}
 		}
@@ -599,10 +606,29 @@ func (p *Parser) ReadTagType() TagType {
 		return OutputTag
 	case '!':
 		return UnsafeTag
+	case '#':
+		return CommentTag
 	default:
 		p.position--
 		return CodeTag
 	}
+}
+
+func (p *Parser) ReadComment() (trim bool, err error) {
+	for {
+		p.SkipUntil('%')
+		if p.ConsumeIf(closeTrimTag) {
+			return true, nil
+		}
+		if p.ConsumeIf(closeTag) {
+			return false, nil
+		}
+		if p.Next() == 0 {
+			return false, p.Error("Expected closing tag for comment")
+		}
+	}
+
+	return false, nil
 }
 
 func (p *Parser) ReadCloseTag() error {
@@ -647,6 +673,14 @@ func (p *Parser) Next() byte {
 		return 0
 	}
 	return p.data[p.position]
+}
+
+func (p *Parser) Peek() byte {
+	position := p.position + 1
+	if position > p.end {
+		return 0
+	}
+	return p.data[position]
 }
 
 func (p *Parser) Prev() byte {
@@ -714,6 +748,9 @@ func (p *Parser) Error(s string) error {
 		end = p.len
 	}
 	start := p.position
+	if start > p.end {
+		start = p.end
+	}
 	for ; start > 0; start-- {
 		if p.data[start] == '%' && p.data[start-1] == '<' {
 			start--

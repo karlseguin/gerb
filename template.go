@@ -30,6 +30,12 @@ func newTemplate(data []byte) (*Template, error) {
 			if output != nil {
 				container.AddExecutable(output)
 			}
+		} else if tagType == core.CommentTag {
+			t, err := parser.ReadComment()
+			if err != nil {
+				return nil, err
+			}
+			trim = t
 		} else if tagType == core.CodeTag {
 			codes, err := createCodeTag(parser)
 			if err != nil {

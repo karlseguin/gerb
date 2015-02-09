@@ -93,7 +93,9 @@ func (p *Parser) ReadValue() (Value, error) {
 	} else if first == '\'' {
 		value, err = p.ReadChar(negate, invert)
 	} else if first == '"' {
-		value, err = p.ReadString(negate, invert)
+		value, err = p.ReadString(negate, invert, '"', true)
+	} else if first == '`' {
+		value, err = p.ReadString(negate, invert, '`', false)
 	} else {
 		if value, ok = p.ReadBuiltin(invert); ok == false {
 			value, err = p.ReadDynamic(negate, invert)
@@ -189,7 +191,7 @@ func (p *Parser) ReadChar(negate, invert bool) (Value, error) {
 	return &StaticValue{c}, nil
 }
 
-func (p *Parser) ReadString(negate, invert bool) (Value, error) {
+func (p *Parser) ReadString(negate, invert bool, end byte, allowEscape bool) (Value, error) {
 	if negate {
 		return nil, p.Error("Don't know what to do with a negative string")
 	}
@@ -202,12 +204,12 @@ func (p *Parser) ReadString(negate, invert bool) (Value, error) {
 
 	for ; p.position < p.end; p.position++ {
 		c := p.data[p.position]
-		if c == '\\' {
+		if c == '\\' && allowEscape {
 			escaped++
 			p.position++
 			continue
 		}
-		if c == '"' {
+		if c == end {
 			break
 		}
 	}

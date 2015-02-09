@@ -40,6 +40,7 @@ func (_ TemplateTest) RendersACharOutput() {
 func (_ TemplateTest) RendersAStringOutput() {
 	assertRender(`<%= "it's over" %> 9000`, `it's over 9000`)
 	assertRender(`<%= "it's \"over\"" %> 9000`, `it's "over" 9000`)
+	assertRender("<%= `it's over` %> 9000", "it's over 9000")
 }
 
 func (_ TemplateTest) BasicIntegerOperations() {
@@ -97,6 +98,11 @@ func (_ TemplateTest) RenderSlices() {
 	assertRender(` <%=   user.Name[:2]   %>`, ` Go`)
 	assertRender(`<%= user.Name[3:]%>`, `u`)
 	assertRender(`<%= user.Name[2]%>`, `k`)
+}
+
+func (_ TemplateTest) RendersAMapValue() {
+	assertRender(`<%= other["a"]%>`, `1`)
+	assertRender("<%= other[`b`]%>", `2`)
 }
 
 func (_ TemplateTest) RenderSliceOfMethodReturn() {
@@ -281,6 +287,7 @@ func assertRender(all ...string) {
 		"f":      false,
 		"user":   &Sayan{"Goku", 9001, &Sayan{"Roshi", 0, nil}},
 		"scores": []int{3, 10, 25},
+		"other":  map[string]int{"a": 1, "b": 2},
 	}
 	buffer := new(bytes.Buffer)
 	template.Render(buffer, data)

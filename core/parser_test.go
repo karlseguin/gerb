@@ -37,10 +37,12 @@ func (_ ParserTest) ErrorsReadingANegativeStringValue() {
 
 func (_ ParserTest) ReadsASimpleStringValue() {
 	assertStaticValue(` "it's over 9000" %>`, `it's over 9000`)
+	assertStaticValue(" `it's over 9000` %>", `it's over 9000`)
 }
 
 func (_ ParserTest) ReadsAnEscapedStringValue() {
 	assertStaticValue(` "it's \n \\\"over 9000" %>`, "it's \n \\\"over 9000")
+	assertStaticValue(" `ab\\n\\c` %>", "ab\\n\\c")
 }
 
 func (_ ParserTest) ErrorReadingStringWithUnknownEscapeSequence() {
